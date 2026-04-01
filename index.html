@@ -217,6 +217,47 @@
         .border-red { border-color: var(--danger) !important; }
         .custom-model { display: none; margin-top: 8px; }
         .custom-model.visible { display: block; }
+        /* Format selector */
+        .format-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .format-tab {
+            flex: 1; padding: 14px 8px; background: var(--input-bg); border: 2px solid var(--card-border);
+            border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .format-tab.active { border-color: var(--primary); background: rgba(225,48,108,0.1); }
+        .format-tab .fmt-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        .format-tab .fmt-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .format-tab.active .fmt-label { color: var(--primary); }
+        .layout-selector { display: none; }
+        .layout-selector.visible { display: block; margin-top: 12px; }
+        .layout-options { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+        .layout-opt {
+            min-width: 90px; padding: 10px; background: var(--input-bg); border: 2px solid var(--card-border);
+            border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+        }
+        .layout-opt.active { border-color: var(--primary); background: rgba(225,48,108,0.1); }
+        .layout-opt .lo-icon { font-size: 20px; margin-bottom: 2px; }
+        .layout-opt .lo-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+        .layout-opt.active .lo-label { color: var(--primary); }
+        /* Canvas output */
+        .canvas-output { display: none; margin-top: 16px; }
+        .canvas-output.visible { display: block; }
+        .canvas-preview {
+            width: 100%; border-radius: 12px; background: var(--card);
+            border: 1px solid var(--card-border); overflow: hidden;
+        }
+        .canvas-preview canvas { width: 100%; display: block; }
+        .btn-download {
+            width: 100%; padding: 14px; background: linear-gradient(135deg, #833AB4, var(--primary));
+            border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 700;
+            cursor: pointer; margin-top: 10px; display: flex; align-items: center;
+            justify-content: center; gap: 8px; transition: all 0.2s;
+        }
+        .btn-download:active { transform: scale(0.98); }
+        .btn-share {
+            width: 100%; padding: 14px; background: #333; border: none;
+            border-radius: 12px; color: white; font-size: 14px; font-weight: 600;
+            cursor: pointer; margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -444,8 +485,27 @@
                 </select>
             </div>
         </div>
-        <!-- STYLE -->
+        <!-- FORMAT -->
         <div class="section">
+            <div class="section-title">📐 Format de sortie</div>
+            <div class="format-tabs" id="formatTabs">
+                <div class="format-tab active" data-format="text">
+                    <span class="fmt-icon">📝</span><span class="fmt-label">Texte</span>
+                </div>
+                <div class="format-tab" data-format="post">
+                    <span class="fmt-icon">📸</span><span class="fmt-label">Post Image</span>
+                </div>
+                <div class="format-tab" data-format="story">
+                    <span class="fmt-icon">📱</span><span class="fmt-label">Story</span>
+                </div>
+            </div>
+            <div class="layout-selector" id="layoutSelector">
+                <label style="margin-bottom:8px">Disposition</label>
+                <div class="layout-options" id="layoutOptions"></div>
+            </div>
+        </div>
+        <!-- STYLE (for text only) -->
+        <div class="section" id="styleSection">
             <div class="section-title">✨ Style du post</div>
             <div class="template-tabs" role="tablist" aria-label="Style du post" id="templateTabs">
                 <div class="template-tab active" role="tab" aria-selected="true" tabindex="0" data-template="classic">🔥 Classique</div>
@@ -489,6 +549,14 @@
                 <div class="hashtags-box" id="hashtagsBox"></div>
             </div>
             <button class="btn-copy-htags" id="btnCopyH">📋 Copier les hashtags</button>
+        </div>
+        <!-- CANVAS OUTPUT -->
+        <div class="canvas-output" id="canvasOutput">
+            <div class="canvas-preview" id="canvasPreview">
+                <canvas id="imgCanvas"></canvas>
+            </div>
+            <button class="btn-download" id="btnDownload">📥 TÉLÉCHARGER L'IMAGE</button>
+            <button class="btn-share" id="btnShare">📤 Partager</button>
         </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite">✅ Copié !</div>
@@ -1202,6 +1270,601 @@ function showToast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
 }
+
+// =====================================================================
+// FORMAT & LAYOUT SYSTEM
+// =====================================================================
+const LAYOUTS = {
+    post: [
+        { id:'gradient', icon:'🌅', label:'Gradient' },
+        { id:'card', icon:'🃏', label:'Card' },
+        { id:'minimal', icon:'◻️', label:'Minimal' },
+    ],
+    story: [
+        { id:'full', icon:'📱', label:'Full Screen' },
+        { id:'split', icon:'⬛', label:'Split' },
+        { id:'bold', icon:'🔥', label:'Bold' },
+    ]
+};
+
+let currentFormat = 'text';
+let currentLayout = 'gradient';
+
+// Format tabs
+document.querySelectorAll('.format-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFormat = this.dataset.format;
+        const ls = $('layoutSelector');
+        const ss = $('styleSection');
+        if (currentFormat === 'text') {
+            ls.classList.remove('visible');
+            ss.style.display = '';
+        } else {
+            ls.classList.add('visible');
+            ss.style.display = 'none';
+            renderLayoutOptions();
+        }
+    });
+});
+
+function renderLayoutOptions() {
+    const container = $('layoutOptions');
+    const layouts = LAYOUTS[currentFormat] || [];
+    container.innerHTML = '';
+    layouts.forEach((l, i) => {
+        const div = document.createElement('div');
+        div.className = 'layout-opt' + (i === 0 ? ' active' : '');
+        div.dataset.layout = l.id;
+        div.innerHTML = `<div class="lo-icon">${l.icon}</div><div class="lo-label">${l.label}</div>`;
+        div.addEventListener('click', () => {
+            container.querySelectorAll('.layout-opt').forEach(o => o.classList.remove('active'));
+            div.classList.add('active');
+            currentLayout = l.id;
+        });
+        container.appendChild(div);
+    });
+    currentLayout = layouts[0]?.id || 'gradient';
+}
+
+// =====================================================================
+// CANVAS IMAGE GENERATOR
+// =====================================================================
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+function drawCover(ctx, img, w, h) {
+    const ratio = Math.max(w / img.width, h / img.height);
+    const nw = img.width * ratio, nh = img.height * ratio;
+    ctx.drawImage(img, (w - nw) / 2, (h - nh) / 2, nw, nh);
+}
+
+function drawWatermark(ctx, w, h) {
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 22px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    // Subtle background pill
+    const text = 'CORNER MOBILE';
+    const tm = ctx.measureText(text);
+    const px = w - 30, py = h - 28;
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#000';
+    const pad = 8;
+    roundRect(ctx, px - tm.width - pad, py - 20 - pad, tm.width + pad * 2, 20 + pad * 2, 6);
+    ctx.fill();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, px, py);
+    ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function drawPriceBadge(ctx, price, oldPrice, x, y, large) {
+    const sz = large ? 52 : 42;
+    ctx.save();
+    ctx.font = `800 ${sz}px -apple-system, sans-serif`;
+    const priceText = fmtPrice(price) + ' DH';
+    const pm = ctx.measureText(priceText);
+    const bw = pm.width + 40, bh = sz + (oldPrice ? 40 : 20);
+    // Badge background
+    ctx.fillStyle = '#E1306C';
+    roundRect(ctx, x, y, bw, bh, 14);
+    ctx.fill();
+    // Price
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(priceText, x + 20, y + (oldPrice ? bh * 0.62 : bh / 2));
+    // Old price strikethrough
+    if (oldPrice) {
+        ctx.font = `600 ${sz * 0.5}px -apple-system, sans-serif`;
+        ctx.globalAlpha = 0.7;
+        const opText = fmtPrice(oldPrice) + ' DH';
+        ctx.fillText(opText, x + 20, y + bh * 0.28);
+        const opm = ctx.measureText(opText);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 18, y + bh * 0.28);
+        ctx.lineTo(x + 22 + opm.width, y + bh * 0.28);
+        ctx.stroke();
+    }
+    ctx.restore();
+    return { w: bw, h: bh };
+}
+
+function wrapText(ctx, text, maxW) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach(w => {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+        else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+}
+
+function drawSpecPills(ctx, specs, startX, startY, maxW) {
+    ctx.save();
+    ctx.font = '600 24px -apple-system, sans-serif';
+    let x = startX, y = startY;
+    const gap = 8, padX = 14, padY = 8, h = 36;
+    specs.forEach(s => {
+        const tm = ctx.measureText(s);
+        const w = tm.width + padX * 2;
+        if (x + w > startX + maxW && x !== startX) { x = startX; y += h + gap; }
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        roundRect(ctx, x, y, w, h, 18);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(s, x + padX, y + h / 2);
+        x += w + gap;
+    });
+    ctx.restore();
+    return y + h + 10;
+}
+
+function getSpecsList(d) {
+    const s = [];
+    if (d.condition) s.push(d.condition);
+    if (d.battery) s.push('Bat. ' + (d.battery === '79-' ? '<80' : d.battery) + '%');
+    if (d.storage) s.push(d.storage);
+    if (d.color) s.push(d.color);
+    if (d.version) s.push(d.version);
+    if (d.faceid === 'Fonctionne') s.push('Face ID ✅');
+    if (d.screen) s.push('Écran ' + d.screen);
+    if (d.warranty) s.push(d.warranty);
+    return s;
+}
+
+// ===== POST LAYOUTS (1080x1350) =====
+
+async function renderPostGradient(ctx, img, d) {
+    const W = 1080, H = 1350;
+    const gr = Math.max(W / img.width, H / img.height);
+    ctx.drawImage(img, (W - img.width * gr) / 2, (H - img.height * gr) / 2, img.width * gr, img.height * gr);
+    // Top gradient
+    let grad = ctx.createLinearGradient(0, 0, 0, 350);
+    grad.addColorStop(0, 'rgba(0,0,0,0.8)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 350);
+    // Bottom gradient
+    grad = ctx.createLinearGradient(0, H - 500, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.4, 'rgba(0,0,0,0.75)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.95)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, H - 500, W, 500);
+    // Model name top
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 54px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    const lines = wrapText(ctx, d.fullName.toUpperCase(), W - 80);
+    lines.forEach((l, i) => ctx.fillText(l, 40, 70 + i * 62));
+    // Price badge bottom
+    const hasOld = d.hasPromo && d.oldPrice;
+    drawPriceBadge(ctx, d.price, hasOld ? d.oldPrice : null, 40, H - 200, true);
+    // Specs pills
+    const specs = getSpecsList(d);
+    drawSpecPills(ctx, specs, 40, H - 100, W - 80);
+    // Shop info
+    if (d.shop) {
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '500 26px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(SHOP_INFO[d.shop]?.replace('📍 ', '') || '', W - 40, 70);
+    }
+    drawWatermark(ctx, W, H);
+}
+
+async function renderPostCard(ctx, img, d) {
+    const W = 1080, H = 1350;
+    // Dark background
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, W, H);
+    // Accent line top
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#E1306C');
+    grad.addColorStop(0.5, '#C13584');
+    grad.addColorStop(1, '#833AB4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 6);
+    // Model name
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 52px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.fullName.toUpperCase(), W / 2, 80);
+    // Photo with rounded corners
+    const photoMargin = 50, photoTop = 120, photoH = 750;
+    const photoW = W - photoMargin * 2;
+    ctx.save();
+    roundRect(ctx, photoMargin, photoTop, photoW, photoH, 20);
+    ctx.clip();
+    const pr = Math.max(photoW / img.width, photoH / img.height);
+    const cpw = img.width * pr, cph = img.height * pr;
+    ctx.drawImage(img, photoMargin + (photoW - cpw) / 2, photoTop + (photoH - cph) / 2, cpw, cph);
+    ctx.restore();
+    // Specs below photo
+    const specsY = photoTop + photoH + 30;
+    const specs = getSpecsList(d);
+    const nextY = drawSpecPills(ctx, specs, photoMargin, specsY, photoW);
+    // Price
+    const hasOld = d.hasPromo && d.oldPrice;
+    drawPriceBadge(ctx, d.price, hasOld ? d.oldPrice : null, photoMargin, Math.min(nextY + 10, H - 200), true);
+    // Shop
+    if (d.shop || d.phoneNum) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '500 26px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        const info = [SHOP_INFO[d.shop]?.replace('📍 ', ''), d.phoneNum ? fmtPhone(d.phoneNum) : ''].filter(Boolean).join('  •  ');
+        ctx.fillText(info, W / 2, H - 40);
+    }
+    drawWatermark(ctx, W, H);
+}
+
+async function renderPostMinimal(ctx, img, d) {
+    const W = 1080, H = 1350;
+    // White border style
+    const border = 60;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    // Photo
+    const pw = W - border * 2, ph = H - 280;
+    ctx.save();
+    roundRect(ctx, border, border, pw, ph, 4);
+    ctx.clip();
+    const r = Math.max(pw / img.width, ph / img.height);
+    ctx.drawImage(img, border + (pw - img.width * r) / 2, border + (ph - img.height * r) / 2, img.width * r, img.height * r);
+    ctx.restore();
+    // Bottom info bar
+    const barY = border + ph + 20;
+    ctx.fillStyle = '#111';
+    ctx.font = '700 44px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.fullName, border, barY + 44);
+    // Specs inline
+    ctx.font = '500 26px -apple-system, sans-serif';
+    ctx.fillStyle = '#666';
+    const specs = getSpecsList(d).slice(0, 4).join('  •  ');
+    ctx.fillText(specs, border, barY + 84);
+    // Price right-aligned
+    ctx.font = '800 52px -apple-system, sans-serif';
+    ctx.fillStyle = '#E1306C';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmtPrice(d.price) + ' DH', W - border, barY + 50);
+    // Watermark on white = dark
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#000';
+    ctx.font = '600 20px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('CORNER MOBILE', W - border, H - 20);
+    ctx.restore();
+}
+
+// ===== STORY LAYOUTS (1080x1920) =====
+
+async function renderStoryFull(ctx, img, d) {
+    const W = 1080, H = 1920;
+    const rr = Math.max(W / img.width, H / img.height);
+    ctx.drawImage(img, (W - img.width * rr) / 2, (H - img.height * rr) / 2, img.width * rr, img.height * rr);
+    // Heavy bottom gradient (60% of height)
+    const grad = ctx.createLinearGradient(0, H * 0.35, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.35, 'rgba(0,0,0,0.6)');
+    grad.addColorStop(0.7, 'rgba(0,0,0,0.9)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.97)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    // Top subtle gradient
+    const grad2 = ctx.createLinearGradient(0, 0, 0, 200);
+    grad2.addColorStop(0, 'rgba(0,0,0,0.5)');
+    grad2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad2;
+    ctx.fillRect(0, 0, W, 200);
+    // Shop name top
+    if (d.shop) {
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '600 28px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(SHOP_INFO[d.shop]?.replace('📍 ', '') || '', W / 2, 60);
+    }
+    // Model name — large, bottom area
+    ctx.fillStyle = '#fff';
+    ctx.font = '900 72px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    const lines = wrapText(ctx, d.fullName.toUpperCase(), W - 100);
+    let nameY = H - 650;
+    lines.forEach((l, i) => ctx.fillText(l, 50, nameY + i * 82));
+    // Specs pills
+    const specsY = nameY + lines.length * 82 + 20;
+    const specs = getSpecsList(d);
+    const nextY = drawSpecPills(ctx, specs, 50, specsY, W - 100);
+    // Price badge
+    const hasOld = d.hasPromo && d.oldPrice;
+    drawPriceBadge(ctx, d.price, hasOld ? d.oldPrice : null, 50, nextY + 10, true);
+    // Phone number
+    if (d.phoneNum) {
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '500 30px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('📞 ' + fmtPhone(d.phoneNum), W / 2, H - 60);
+    }
+    drawWatermark(ctx, W, H);
+}
+
+async function renderStorySplit(ctx, img, d) {
+    const W = 1080, H = 1920;
+    const splitAt = Math.round(H * 0.52);
+    // Photo top
+    ctx.save();
+    ctx.rect(0, 0, W, splitAt);
+    ctx.clip();
+    const sr = Math.max(W / img.width, splitAt / img.height);
+    ctx.drawImage(img, (W - img.width * sr) / 2, (splitAt - img.height * sr) / 2, img.width * sr, img.height * sr);
+    ctx.restore();
+    // Dark bottom
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, splitAt, W, H - splitAt);
+    // Accent line
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#E1306C');
+    grad.addColorStop(1, '#833AB4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, splitAt, W, 5);
+    // Content
+    let y = splitAt + 50;
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 56px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    const lines = wrapText(ctx, d.fullName.toUpperCase(), W - 100);
+    lines.forEach(l => { ctx.fillText(l, 50, y + 50); y += 64; });
+    y += 20;
+    // Specs
+    const specs = getSpecsList(d);
+    ctx.font = '500 30px -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    specs.forEach(s => { ctx.fillText('• ' + s, 50, y + 34); y += 44; });
+    y += 20;
+    // Price
+    const hasOld = d.hasPromo && d.oldPrice;
+    drawPriceBadge(ctx, d.price, hasOld ? d.oldPrice : null, 50, y, true);
+    // Shop + phone
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '500 26px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    const info = [SHOP_INFO[d.shop]?.replace('📍 ', ''), d.phoneNum ? '📞 ' + fmtPhone(d.phoneNum) : ''].filter(Boolean).join('\n');
+    info.split('\n').forEach((l, i) => ctx.fillText(l, W / 2, H - 80 + i * 36));
+    drawWatermark(ctx, W, H);
+}
+
+async function renderStoryBold(ctx, img, d) {
+    const W = 1080, H = 1920;
+    const br = Math.max(W / img.width, H / img.height);
+    ctx.drawImage(img, (W - img.width * br) / 2, (H - img.height * br) / 2, img.width * br, img.height * br);
+    // Dark overlay everywhere
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    // Big centered content
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    // Brand small
+    ctx.font = '600 32px -apple-system, sans-serif';
+    ctx.globalAlpha = 0.7;
+    ctx.fillText((d.brand === 'Apple' ? 'iPhone' : d.brand).toUpperCase(), W / 2, H * 0.3);
+    ctx.globalAlpha = 1;
+    // Model HUGE
+    ctx.font = '900 80px -apple-system, sans-serif';
+    const lines = wrapText(ctx, d.model.toUpperCase(), W - 120);
+    lines.forEach((l, i) => ctx.fillText(l, W / 2, H * 0.3 + 70 + i * 90));
+    // Storage
+    if (d.storage) {
+        ctx.font = '700 40px -apple-system, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.fillText(d.storage, W / 2, H * 0.3 + 70 + lines.length * 90 + 20);
+    }
+    // Price — big centered badge
+    const hasOld = d.hasPromo && d.oldPrice;
+    ctx.font = '800 52px -apple-system, sans-serif';
+    const pt = fmtPrice(d.price) + ' DH';
+    const pm = ctx.measureText(pt);
+    drawPriceBadge(ctx, d.price, hasOld ? d.oldPrice : null, (W - pm.width - 40) / 2, H * 0.62, true);
+    // Specs bottom
+    ctx.fillStyle = '#fff';
+    const specs = getSpecsList(d);
+    drawSpecPills(ctx, specs, 50, H * 0.76, W - 100);
+    // Shop
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '500 28px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    if (d.shop) ctx.fillText(SHOP_INFO[d.shop]?.replace('📍 ', '') || '', W / 2, H - 100);
+    if (d.phoneNum) ctx.fillText('📞 ' + fmtPhone(d.phoneNum), W / 2, H - 60);
+    drawWatermark(ctx, W, H);
+}
+
+// ===== MAIN RENDER DISPATCHER =====
+async function generateImage(d) {
+    if (!currentPhotoURL) { showToast('⚠️ Ajoute une photo pour générer l\'image'); return; }
+    const canvas = $('imgCanvas');
+    const ctx = canvas.getContext('2d');
+    const isStory = currentFormat === 'story';
+    canvas.width = 1080;
+    canvas.height = isStory ? 1920 : 1350;
+
+    const img = await loadImage(currentPhotoURL);
+
+    if (currentFormat === 'post') {
+        if (currentLayout === 'gradient') await renderPostGradient(ctx, img, d);
+        else if (currentLayout === 'card') await renderPostCard(ctx, img, d);
+        else await renderPostMinimal(ctx, img, d);
+    } else {
+        if (currentLayout === 'full') await renderStoryFull(ctx, img, d);
+        else if (currentLayout === 'split') await renderStorySplit(ctx, img, d);
+        else await renderStoryBold(ctx, img, d);
+    }
+
+    $('canvasOutput').classList.add('visible');
+}
+
+// Download
+$('btnDownload').addEventListener('click', () => {
+    const canvas = $('imgCanvas');
+    canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const fmt = currentFormat === 'story' ? 'story' : 'post';
+        a.download = `corner-mobile-${fmt}-${Date.now()}.jpg`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('✅ Image téléchargée !');
+    }, 'image/jpeg', 0.92);
+});
+
+// Share (Web Share API)
+$('btnShare').addEventListener('click', async () => {
+    const canvas = $('imgCanvas');
+    canvas.toBlob(async blob => {
+        const file = new File([blob], 'corner-mobile.jpg', { type: 'image/jpeg' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'Corner Mobile' });
+            } catch(e) { /* cancelled */ }
+        } else {
+            // Fallback: download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'corner-mobile.jpg'; a.click();
+            URL.revokeObjectURL(url);
+            showToast('📥 Image téléchargée (partage non supporté)');
+        }
+    }, 'image/jpeg', 0.92);
+});
+
+// =====================================================================
+// PATCH generatePost to handle image formats
+// =====================================================================
+const _origGenerate = generatePost;
+generatePost = function() {
+    if (currentFormat === 'text') {
+        $('canvasOutput').classList.remove('visible');
+        $('btnCopy').style.display = '';
+        _origGenerate();
+        return;
+    }
+    // Image mode
+    const brand = $('brand').value;
+    const model = brand === 'Autre' ? $('customModel').value.trim() : $('model').value;
+    const storage = $('storage').value;
+    const price = $('price').value;
+    const oldPrice = $('oldPrice').value;
+    const promoOn = $('promoToggle').getAttribute('aria-checked') === 'true';
+    const hasPromo = promoOn && oldPrice && parseInt(oldPrice) > 0;
+    const hasPhoto = $('photoUpload').classList.contains('has-photo');
+
+    if (!brand || !model) { showToast('⚠️ Remplis la marque et le modèle'); return; }
+    const pNum = parseInt(price);
+    if (!price || isNaN(pNum) || pNum <= 0) { showToast('⚠️ Entre un prix valide (> 0 DH)'); return; }
+    if (!hasPhoto) { showToast('⚠️ Ajoute une photo pour le format image'); return; }
+
+    // Coherence
+    const condition = $('condition').value;
+    const check = checkCoherence({
+        brand, model, storage, color: $('color').value, battery: $('battery').value,
+        condition, version: $('version').value, sim: $('sim').value,
+        unlock: $('unlock').value, faceid: $('faceid').value, screen: $('screen').value,
+        warranty: $('warranty').value, icloud: $('icloud').value,
+        price, oldPrice, hasPromo, hasPhoto, shop: $('shop').value, phone: $('phone').value,
+        accessories: [...document.querySelectorAll('#accessories input:checked')].map(c => c.value),
+        ram: $('ram').value
+    });
+    renderReliability(check);
+
+    const isApple = brand === 'Apple';
+    const phoneName = `${isApple ? '' : brand + ' '}${model}`;
+    const fullName = `${phoneName}${storage ? ' ' + storage : ''}`;
+
+    // Hide text output, show canvas
+    $('outputSection').classList.remove('visible');
+
+    generateImage({
+        brand, model, storage, fullName, phoneName, price, oldPrice, hasPromo,
+        condition, battery: $('battery').value, color: $('color').value,
+        version: $('version').value, faceid: $('faceid').value,
+        screen: $('screen').value, warranty: $('warranty').value,
+        shop: $('shop').value, phoneNum: $('phone').value
+    }).then(() => {
+        // Also generate hashtags
+        const bTag = brand.toLowerCase().replace(/\s/g,'');
+        const mTag = model.toLowerCase().replace(/[\s+()]/g,'').replace(/'/g,'');
+        let h = `#${bTag} #${mTag} #smartphone #occasion #rabat #maroc #morocco #phoneshop #cornermobile #telephone`;
+        if (brand === 'Apple') h += ' #iphone #apple #ios #iphoneonly #iphonemaroc';
+        else if (brand === 'Samsung') h += ' #samsung #galaxy #android #samsungmaroc';
+        else h += ' #android';
+        h += ' #bonplan #prixchoc #hmizat #promo #deal #smartphonemaroc #telephoneoccasion #ventemaroc #bonneaffaire #telephonepascher';
+
+        // Show hashtags below canvas
+        $('outputSection').classList.add('visible');
+        $('outputText').textContent = '';
+        $('outputPhoto').style.display = 'none';
+        $('btnCopy').style.display = 'none';
+        $('hashtagsBox').textContent = h;
+
+        setTimeout(() => $('reliabilitySection').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+    });
+};
+// Re-bind
+$('btnGenerate').removeEventListener('click', _origGenerate);
+$('btnGenerate').addEventListener('click', generatePost);
 
 // PWA
 if ('serviceWorker' in navigator) {
