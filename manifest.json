@@ -1,11 +1,11 @@
 {
-  "name": "Générateur de Posts Instagram",
+  "name": "Corner Mobile — PostGen",
   "short_name": "PostGen",
-  "description": "Génère des annonces Instagram pour boutique de téléphones",
+  "description": "Génère des annonces Instagram pour Corner Mobile",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#E1306C",
+  "background_color": "#080c0f",
+  "theme_color": "#2AA8DC",
   "orientation": "portrait",
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
