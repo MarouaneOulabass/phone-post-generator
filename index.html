@@ -2,7 +2,12 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#E1306C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <title>📱 Générateur de Posts Instagram</title>
     <style>
         :root {
@@ -11,138 +16,112 @@
             --bg: #0a0a0a;
             --card: #1a1a1a;
             --card-border: #2a2a2a;
-            --text: #ffffff;
+            --text: #fff;
             --text-muted: #888;
             --success: #00c853;
             --warning: #ff9800;
             --danger: #f44336;
             --input-bg: #111;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            background: var(--bg); color: var(--text);
             min-height: 100vh;
-            padding-bottom: 100px;
+            padding-bottom: calc(100px + var(--safe-bottom));
         }
-
         .header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark), #833AB4);
-            padding: 20px 16px 16px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: calc(20px + var(--safe-top)) 16px 16px;
+            text-align: center; position: sticky; top: 0; z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-
-        .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+        .header h1 { font-size: 20px; font-weight: 700; }
         .header p { font-size: 12px; opacity: 0.85; margin-top: 4px; }
-
         .container { max-width: 480px; margin: 0 auto; padding: 16px; }
-
         .section {
-            background: var(--card);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
+            background: var(--card); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 16px; margin-bottom: 12px;
         }
-
         .section-title {
             font-size: 13px; font-weight: 600; color: var(--primary);
             text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
-            display: flex; align-items: center; gap: 6px;
         }
-
         .form-group { margin-bottom: 12px; }
         .form-group:last-child { margin-bottom: 0; }
-
         label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
-
         select, input[type="text"], input[type="number"], input[type="tel"] {
             width: 100%; padding: 12px 14px; background: var(--input-bg);
             border: 1px solid var(--card-border); border-radius: 10px;
             color: var(--text); font-size: 16px; appearance: none;
             -webkit-appearance: none; outline: none; transition: border-color 0.2s;
         }
-
         select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
         }
-
         select:focus, input:focus { border-color: var(--primary); }
-
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
+        /* Photo */
         .photo-upload {
             border: 2px dashed var(--card-border); border-radius: 12px;
             padding: 24px; text-align: center; cursor: pointer;
             transition: all 0.2s; position: relative; overflow: hidden;
         }
-        .photo-upload:active { border-color: var(--primary); background: rgba(225,48,108,0.05); }
+        .photo-upload:active { border-color: var(--primary); }
         .photo-upload.has-photo { padding: 0; border: none; }
         .photo-upload img { width: 100%; border-radius: 12px; display: block; }
         .photo-upload .upload-icon { font-size: 36px; margin-bottom: 8px; }
         .photo-upload .upload-text { font-size: 13px; color: var(--text-muted); }
         .photo-upload input { display: none; }
-
         .photo-remove {
             position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7);
-            border: none; color: white; width: 30px; height: 30px;
-            border-radius: 50%; font-size: 16px; cursor: pointer; display: none;
+            border: none; color: white; width: 44px; height: 44px;
+            border-radius: 50%; font-size: 18px; cursor: pointer; display: none;
+            align-items: center; justify-content: center;
         }
-        .has-photo .photo-remove { display: block; }
-
+        .has-photo .photo-remove { display: flex; }
+        /* Checkboxes */
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
-
-        .checkbox-item {
+        .cb-item {
             display: flex; align-items: center; gap: 6px; background: var(--input-bg);
-            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--card-border);
-            cursor: pointer; font-size: 13px; transition: all 0.2s;
+            padding: 12px 14px; border-radius: 8px; border: 1px solid var(--card-border);
+            cursor: pointer; font-size: 14px; transition: all 0.2s;
         }
-        .checkbox-item input { display: none; }
-        .checkbox-item.checked { border-color: var(--primary); background: rgba(225,48,108,0.15); }
-
-        .checkbox-item .check-icon {
-            width: 18px; height: 18px; border-radius: 4px;
+        .cb-item input[type="checkbox"] { display: none; }
+        .cb-item.checked { border-color: var(--primary); background: rgba(225,48,108,0.15); }
+        .cb-item .ck {
+            width: 20px; height: 20px; border-radius: 4px;
             border: 2px solid var(--card-border); display: flex;
-            align-items: center; justify-content: center; font-size: 11px; transition: all 0.2s;
+            align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; flex-shrink: 0;
         }
-        .checkbox-item.checked .check-icon { background: var(--primary); border-color: var(--primary); }
-
+        .cb-item.checked .ck { background: var(--primary); border-color: var(--primary); }
+        .cb-item.checked .ck::after { content: '✓'; color: #fff; font-size: 13px; }
+        /* Buttons */
         .btn-generate {
             width: 100%; padding: 16px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none; border-radius: 14px; color: white; font-size: 18px;
-            font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
-            transition: all 0.2s; display: flex; align-items: center;
-            justify-content: center; gap: 8px; margin-top: 16px;
+            font-weight: 700; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px;
         }
         .btn-generate:active { transform: scale(0.98); opacity: 0.9; }
-
         .output-section { display: none; margin-top: 16px; }
         .output-section.visible { display: block; }
-
         .output-box {
             background: var(--card); border: 1px solid var(--card-border);
-            border-radius: 16px; padding: 16px; position: relative;
+            border-radius: 16px; padding: 16px;
         }
-
         .output-label {
             font-size: 12px; font-weight: 600; color: var(--primary);
             text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
         }
-
         .output-text {
             font-size: 14px; line-height: 1.7; white-space: pre-wrap;
-            word-break: break-word; color: var(--text); user-select: all; -webkit-user-select: all;
+            word-break: break-word; user-select: all; -webkit-user-select: all;
         }
-
         .btn-copy {
             width: 100%; padding: 14px; background: var(--success); border: none;
             border-radius: 12px; color: white; font-size: 16px; font-weight: 700;
@@ -151,139 +130,91 @@
         }
         .btn-copy:active { transform: scale(0.98); }
         .btn-copy.copied { background: #333; }
-
         .output-photo-preview { width: 100%; border-radius: 12px; margin-bottom: 12px; display: none; }
-
+        /* Template tabs */
         .template-tabs {
-            display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto;
+            display: flex; gap: 6px; overflow-x: auto;
             padding-bottom: 4px; -webkit-overflow-scrolling: touch;
         }
-
         .template-tab {
-            padding: 8px 14px; background: var(--input-bg); border: 1px solid var(--card-border);
-            border-radius: 20px; color: var(--text-muted); font-size: 12px;
+            padding: 12px 16px; background: var(--input-bg); border: 1px solid var(--card-border);
+            border-radius: 20px; color: var(--text-muted); font-size: 13px;
             font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;
         }
         .template-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
-
+        .template-tab[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: white; }
         .hashtags-box {
             background: var(--input-bg); border: 1px solid var(--card-border);
             border-radius: 10px; padding: 12px; margin-top: 10px;
             font-size: 12px; color: var(--text-muted); line-height: 1.6;
             user-select: all; -webkit-user-select: all;
         }
-
-        .btn-copy-hashtags {
-            width: 100%; padding: 10px; background: #333; border: none;
-            border-radius: 10px; color: white; font-size: 13px; font-weight: 600;
-            cursor: pointer; margin-top: 8px; transition: all 0.2s;
+        .btn-copy-htags {
+            width: 100%; padding: 14px; background: #333; border: none;
+            border-radius: 10px; color: white; font-size: 14px; font-weight: 600;
+            cursor: pointer; margin-top: 8px;
         }
-        .btn-copy-hashtags:active { transform: scale(0.98); }
-
         .toast {
-            position: fixed; bottom: 30px; left: 50%;
+            position: fixed; bottom: calc(30px + var(--safe-bottom)); left: 50%;
             transform: translateX(-50%) translateY(100px);
             background: var(--success); color: white; padding: 12px 24px;
             border-radius: 30px; font-size: 14px; font-weight: 600;
             z-index: 1000; transition: transform 0.3s ease; pointer-events: none;
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
-
+        /* Promo toggle */
         .promo-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
         .promo-toggle span { font-size: 14px; }
-
-        .toggle-switch {
-            width: 48px; height: 26px; background: #333; border-radius: 13px;
+        .toggle-sw {
+            width: 52px; height: 32px; background: #333; border-radius: 16px;
             position: relative; cursor: pointer; transition: background 0.2s;
+            border: none; padding: 0;
         }
-        .toggle-switch.active { background: var(--primary); }
-        .toggle-switch::after {
-            content: ''; position: absolute; width: 22px; height: 22px;
-            background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s;
+        .toggle-sw[aria-checked="true"] { background: var(--primary); }
+        .toggle-sw::after {
+            content: ''; position: absolute; width: 26px; height: 26px;
+            background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s;
         }
-        .toggle-switch.active::after { transform: translateX(22px); }
-
+        .toggle-sw[aria-checked="true"]::after { transform: translateX(20px); }
         .promo-field { display: none; margin-top: 10px; }
         .promo-field.visible { display: block; }
-
-        /* ===== RELIABILITY INDEX ===== */
-        .reliability-section {
-            display: none;
-            margin-top: 16px;
-            margin-bottom: 12px;
-        }
+        /* Reliability */
+        .reliability-section { display: none; margin-top: 16px; margin-bottom: 12px; }
         .reliability-section.visible { display: block; }
-
         .reliability-card {
-            background: var(--card);
-            border: 2px solid var(--card-border);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
+            background: var(--card); border: 2px solid var(--card-border);
+            border-radius: 16px; padding: 20px; text-align: center;
         }
-
-        .reliability-header {
-            font-size: 13px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1px; margin-bottom: 16px; color: var(--text-muted);
-        }
-
-        .reliability-score-wrap {
-            display: flex; align-items: center; justify-content: center; gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .reliability-gauge {
-            width: 100px; height: 100px; position: relative;
-        }
-
+        .reliability-header { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; color: var(--text-muted); }
+        .reliability-score-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
+        .reliability-gauge { width: 100px; height: 100px; position: relative; }
         .reliability-gauge svg { transform: rotate(-90deg); }
-        .reliability-gauge circle {
-            fill: none; stroke-width: 8; stroke-linecap: round;
-        }
+        .reliability-gauge circle { fill: none; stroke-width: 8; stroke-linecap: round; }
         .gauge-bg { stroke: #222; }
         .gauge-fill { transition: stroke-dashoffset 0.8s ease, stroke 0.4s; }
-
-        .gauge-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 28px; font-weight: 800;
-        }
-
-        .reliability-label {
-            font-size: 18px; font-weight: 700;
-        }
-
-        .reliability-status {
-            display: inline-block; padding: 4px 14px; border-radius: 20px;
-            font-size: 13px; font-weight: 700; margin-top: 4px;
-        }
-
-        .reliability-alerts {
-            margin-top: 16px; text-align: left;
-        }
-
+        .gauge-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; font-weight: 800; }
+        .reliability-label { font-size: 18px; font-weight: 700; }
+        .reliability-status { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 4px; }
+        .reliability-alerts { margin-top: 16px; text-align: left; }
         .alert-item {
             display: flex; align-items: flex-start; gap: 10px;
             padding: 10px 12px; border-radius: 10px; margin-bottom: 6px;
-            font-size: 13px; line-height: 1.4;
+            font-size: 14px; line-height: 1.4;
         }
-
-        .alert-item:last-child { margin-bottom: 0; }
-
         .alert-critical { background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.3); color: #ff6b6b; }
         .alert-warning { background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.3); color: #ffa726; }
         .alert-info { background: rgba(33,150,243,0.12); border: 1px solid rgba(33,150,243,0.3); color: #64b5f6; }
         .alert-ok { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); color: #69f0ae; }
-
         .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
         .alert-text { flex: 1; }
-
         .score-green { color: var(--success); }
         .score-orange { color: var(--warning); }
         .score-red { color: var(--danger); }
-
         .border-green { border-color: var(--success) !important; }
         .border-orange { border-color: var(--warning) !important; }
         .border-red { border-color: var(--danger) !important; }
+        .custom-model { display: none; margin-top: 8px; }
+        .custom-model.visible { display: block; }
     </style>
 </head>
 <body>
@@ -291,25 +222,23 @@
         <h1>📱 Générateur de Posts</h1>
         <p>Crée ton annonce Instagram en 2 clics</p>
     </div>
-
     <div class="container">
         <!-- PHOTO -->
         <div class="section">
             <div class="section-title">📸 Photo du produit</div>
-            <div class="photo-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
+            <div class="photo-upload" id="photoUpload">
                 <div class="upload-icon">📷</div>
                 <div class="upload-text">Appuie pour ajouter une photo</div>
-                <input type="file" id="photoInput" accept="image/*" capture="environment">
-                <button class="photo-remove" onclick="event.stopPropagation(); removePhoto()">✕</button>
+                <input type="file" id="photoInput" accept="image/*">
+                <button class="photo-remove" id="photoRemove" aria-label="Supprimer la photo">✕</button>
             </div>
         </div>
-
         <!-- INFOS TÉLÉPHONE -->
         <div class="section">
             <div class="section-title">📋 Infos du téléphone</div>
             <div class="form-group">
-                <label>Marque</label>
-                <select id="brand" onchange="updateModels()">
+                <label for="brand">Marque</label>
+                <select id="brand">
                     <option value="">-- Choisir --</option>
                     <option value="Apple">Apple (iPhone)</option>
                     <option value="Samsung">Samsung</option>
@@ -327,91 +256,55 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Modèle</label>
-                <select id="model">
-                    <option value="">-- Choisir la marque d'abord --</option>
-                </select>
+                <label for="model">Modèle</label>
+                <select id="model"><option value="">-- Choisir la marque d'abord --</option></select>
             </div>
-            <div class="row">
+            <div class="custom-model" id="customModelWrap">
                 <div class="form-group">
-                    <label>Stockage</label>
-                    <select id="storage">
-                        <option value="">--</option>
-                        <option value="32GB">32 GB</option>
-                        <option value="64GB">64 GB</option>
-                        <option value="128GB">128 GB</option>
-                        <option value="256GB">256 GB</option>
-                        <option value="512GB">512 GB</option>
-                        <option value="1TB">1 TB</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Couleur</label>
-                    <select id="color">
-                        <option value="">--</option>
-                        <option value="Noir">Noir</option>
-                        <option value="Blanc">Blanc</option>
-                        <option value="Bleu">Bleu</option>
-                        <option value="Rouge">Rouge</option>
-                        <option value="Vert">Vert</option>
-                        <option value="Rose">Rose</option>
-                        <option value="Violet">Violet</option>
-                        <option value="Gold">Gold</option>
-                        <option value="Argent">Argent</option>
-                        <option value="Gris">Gris Sidéral</option>
-                        <option value="Titane Naturel">Titane Naturel</option>
-                        <option value="Titane Noir">Titane Noir</option>
-                        <option value="Titane Blanc">Titane Blanc</option>
-                        <option value="Titane Bleu">Titane Bleu</option>
-                        <option value="Titane Désert">Titane Désert</option>
-                    </select>
+                    <label for="customModel">Nom du modèle</label>
+                    <input type="text" id="customModel" placeholder="Ex: Vivo Y36">
                 </div>
             </div>
             <div class="row">
                 <div class="form-group">
-                    <label>RAM</label>
+                    <label for="storage">Stockage</label>
+                    <select id="storage"><option value="">--</option></select>
+                </div>
+                <div class="form-group">
+                    <label for="color">Couleur</label>
+                    <select id="color"><option value="">--</option></select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="ram">RAM</label>
                     <select id="ram">
                         <option value="">--</option>
-                        <option value="3GB">3 GB</option>
-                        <option value="4GB">4 GB</option>
-                        <option value="6GB">6 GB</option>
-                        <option value="8GB">8 GB</option>
-                        <option value="12GB">12 GB</option>
-                        <option value="16GB">16 GB</option>
+                        <option>3 GB</option><option>4 GB</option><option>6 GB</option>
+                        <option>8 GB</option><option>12 GB</option><option>16 GB</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Batterie (%)</label>
+                    <label for="battery">Batterie (%)</label>
                     <select id="battery">
                         <option value="">--</option>
-                        <option value="100">100%</option>
-                        <option value="99">99%</option>
-                        <option value="98">98%</option>
-                        <option value="97">97%</option>
-                        <option value="96">96%</option>
-                        <option value="95">95%</option>
-                        <option value="94">94%</option>
-                        <option value="93">93%</option>
-                        <option value="92">92%</option>
-                        <option value="91">91%</option>
-                        <option value="90">90%</option>
-                        <option value="89">89%</option>
-                        <option value="88">88%</option>
-                        <option value="87">87%</option>
-                        <option value="86">86%</option>
-                        <option value="85">85%</option>
-                        <option value="84">84%</option>
-                        <option value="83">83%</option>
-                        <option value="82">82%</option>
-                        <option value="81">81%</option>
-                        <option value="80">80%</option>
-                        <option value="79-">Moins de 80%</option>
+                        <option value="100">100%</option><option value="99">99%</option>
+                        <option value="98">98%</option><option value="97">97%</option>
+                        <option value="96">96%</option><option value="95">95%</option>
+                        <option value="94">94%</option><option value="93">93%</option>
+                        <option value="92">92%</option><option value="91">91%</option>
+                        <option value="90">90%</option><option value="89">89%</option>
+                        <option value="88">88%</option><option value="87">87%</option>
+                        <option value="86">86%</option><option value="85">85%</option>
+                        <option value="84">84%</option><option value="83">83%</option>
+                        <option value="82">82%</option><option value="81">81%</option>
+                        <option value="80">80%</option><option value="79-">Moins de 80%</option>
                     </select>
                 </div>
             </div>
             <div class="row">
                 <div class="form-group">
-                    <label>État</label>
+                    <label for="condition">État</label>
                     <select id="condition">
                         <option value="">--</option>
                         <option value="Neuf">Neuf sous blister</option>
@@ -423,7 +316,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Version</label>
+                    <label for="version">Version</label>
                     <select id="version">
                         <option value="">--</option>
                         <option value="Europe">🇪🇺 Europe</option>
@@ -434,66 +327,104 @@
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label>Double SIM ?</label>
-                <select id="sim">
-                    <option value="">--</option>
-                    <option value="Double SIM">Double SIM</option>
-                    <option value="SIM + eSIM">SIM + eSIM</option>
-                    <option value="Single SIM">Single SIM</option>
-                </select>
+            <div class="row">
+                <div class="form-group">
+                    <label for="sim">SIM</label>
+                    <select id="sim">
+                        <option value="">--</option>
+                        <option>Double SIM</option>
+                        <option>SIM + eSIM</option>
+                        <option>Single SIM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="unlock">Déverrouillage</label>
+                    <select id="unlock">
+                        <option value="">--</option>
+                        <option value="Débloqué tout opérateur">Débloqué</option>
+                        <option value="Bloqué opérateur">Bloqué opérateur</option>
+                    </select>
+                </div>
             </div>
         </div>
-
+        <!-- ÉTAT DÉTAILLÉ -->
+        <div class="section">
+            <div class="section-title">🔎 État détaillé</div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="faceid">Face ID / Biométrie</label>
+                    <select id="faceid">
+                        <option value="">--</option>
+                        <option value="Fonctionne">✅ Fonctionne</option>
+                        <option value="Ne fonctionne pas">❌ Ne fonctionne pas</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="screen">Écran</label>
+                    <select id="screen">
+                        <option value="">--</option>
+                        <option value="Original">Original</option>
+                        <option value="Changé (original)">Changé (pièce originale)</option>
+                        <option value="Changé (copie)">Changé (copie)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="warranty">Garantie</label>
+                    <select id="warranty">
+                        <option value="">--</option>
+                        <option value="Sous garantie constructeur">Garantie constructeur</option>
+                        <option value="Garantie magasin">Garantie magasin</option>
+                        <option value="Sans garantie">Sans garantie</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="icloud">iCloud / FRP</label>
+                    <select id="icloud">
+                        <option value="">--</option>
+                        <option value="Déconnecté">✅ Déconnecté</option>
+                        <option value="Connecté">⚠️ Encore connecté</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         <!-- ACCESSOIRES -->
         <div class="section">
             <div class="section-title">🎁 Accessoires inclus</div>
-            <div class="checkbox-group" id="accessories">
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Boîte d'origine"><span class="check-icon"></span><span>📦 Boîte</span>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Chargeur"><span class="check-icon"></span><span>🔌 Chargeur</span>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Écouteurs"><span class="check-icon"></span><span>🎧 Écouteurs</span>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Coque"><span class="check-icon"></span><span>🛡️ Coque</span>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Protection écran"><span class="check-icon"></span><span>🪟 Verre trempé</span>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" value="Câble"><span class="check-icon"></span><span>🔗 Câble</span>
-                </div>
+            <div class="checkbox-group" id="accessories" role="group" aria-label="Accessoires inclus">
+                <label class="cb-item"><input type="checkbox" value="Boîte d'origine"><span class="ck"></span>📦 Boîte</label>
+                <label class="cb-item"><input type="checkbox" value="Chargeur"><span class="ck"></span>🔌 Chargeur</label>
+                <label class="cb-item"><input type="checkbox" value="Écouteurs"><span class="ck"></span>🎧 Écouteurs</label>
+                <label class="cb-item"><input type="checkbox" value="Coque"><span class="ck"></span>🛡️ Coque</label>
+                <label class="cb-item"><input type="checkbox" value="Protection écran"><span class="ck"></span>🪟 Verre trempé</label>
+                <label class="cb-item"><input type="checkbox" value="Câble"><span class="ck"></span>🔗 Câble</label>
             </div>
         </div>
-
-        <!-- PRIX & PROMO -->
+        <!-- PRIX -->
         <div class="section">
             <div class="section-title">💰 Prix</div>
             <div class="form-group">
-                <label>Prix (DH)</label>
-                <input type="number" id="price" placeholder="Ex: 5500" inputmode="numeric">
+                <label for="price">Prix (DH)</label>
+                <input type="number" id="price" placeholder="Ex: 5500" inputmode="numeric" min="1">
             </div>
             <div class="promo-toggle">
                 <span>🏷️ Promotion ?</span>
-                <div class="toggle-switch" id="promoToggle" onclick="togglePromo()"></div>
+                <button class="toggle-sw" id="promoToggle" role="switch" aria-checked="false" aria-label="Activer la promotion"></button>
             </div>
             <div class="promo-field" id="promoField">
                 <div class="form-group">
-                    <label>Ancien prix (DH)</label>
-                    <input type="number" id="oldPrice" placeholder="Ex: 6500" inputmode="numeric">
+                    <label for="oldPrice">Ancien prix (DH)</label>
+                    <input type="number" id="oldPrice" placeholder="Ex: 6500" inputmode="numeric" min="1">
                 </div>
             </div>
         </div>
-
         <!-- BOUTIQUE -->
         <div class="section">
             <div class="section-title">🏪 Boutique</div>
             <div class="form-group">
-                <label>Point de vente</label>
+                <label for="shop">Point de vente</label>
                 <select id="shop">
                     <option value="">--</option>
                     <option value="M1">📍 Magasin 1 — CC Aït Baha, Rabat</option>
@@ -501,7 +432,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Numéro de contact</label>
+                <label for="phone">Numéro de contact</label>
                 <select id="phone">
                     <option value="">--</option>
                     <option value="0603169398">📞 06 03 16 93 98</option>
@@ -511,25 +442,19 @@
                 </select>
             </div>
         </div>
-
-        <!-- STYLE DU POST -->
+        <!-- STYLE -->
         <div class="section">
             <div class="section-title">✨ Style du post</div>
-            <div class="template-tabs" id="templateTabs">
-                <div class="template-tab active" data-template="classic" onclick="selectTemplate(this)">🔥 Classique</div>
-                <div class="template-tab" data-template="promo" onclick="selectTemplate(this)">💥 Promo Choc</div>
-                <div class="template-tab" data-template="premium" onclick="selectTemplate(this)">👑 Premium</div>
-                <div class="template-tab" data-template="urgent" onclick="selectTemplate(this)">⚡ Urgent</div>
-                <div class="template-tab" data-template="simple" onclick="selectTemplate(this)">📝 Simple</div>
+            <div class="template-tabs" role="tablist" aria-label="Style du post" id="templateTabs">
+                <div class="template-tab active" role="tab" aria-selected="true" tabindex="0" data-template="classic">🔥 Classique</div>
+                <div class="template-tab" role="tab" aria-selected="false" tabindex="-1" data-template="promo">💥 Promo Choc</div>
+                <div class="template-tab" role="tab" aria-selected="false" tabindex="-1" data-template="premium">👑 Premium</div>
+                <div class="template-tab" role="tab" aria-selected="false" tabindex="-1" data-template="urgent">⚡ Urgent</div>
+                <div class="template-tab" role="tab" aria-selected="false" tabindex="-1" data-template="simple">📝 Simple</div>
             </div>
         </div>
-
-        <!-- GENERATE BUTTON -->
-        <button class="btn-generate" onclick="generatePost()">
-            ✨ GÉNÉRER LE POST
-        </button>
-
-        <!-- RELIABILITY INDEX -->
+        <button class="btn-generate" id="btnGenerate">✨ GÉNÉRER LE POST</button>
+        <!-- RELIABILITY -->
         <div class="reliability-section" id="reliabilitySection">
             <div class="reliability-card" id="reliabilityCard">
                 <div class="reliability-header">🔍 Indice de Fiabilité</div>
@@ -537,8 +462,7 @@
                     <div class="reliability-gauge">
                         <svg width="100" height="100" viewBox="0 0 100 100">
                             <circle class="gauge-bg" cx="50" cy="50" r="42"></circle>
-                            <circle class="gauge-fill" id="gaugeFill" cx="50" cy="50" r="42"
-                                stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                            <circle class="gauge-fill" id="gaugeFill" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
                         </svg>
                         <div class="gauge-text" id="scoreText">--</div>
                     </div>
@@ -547,682 +471,740 @@
                         <div class="reliability-status" id="scoreStatus">--</div>
                     </div>
                 </div>
-                <div class="reliability-alerts" id="alertsList"></div>
+                <div class="reliability-alerts" id="alertsList" role="status" aria-live="polite"></div>
             </div>
         </div>
-
         <!-- OUTPUT -->
         <div class="output-section" id="outputSection">
             <div class="output-box">
                 <div class="output-label">📋 Ton post Instagram</div>
-                <img class="output-photo-preview" id="outputPhoto">
+                <img class="output-photo-preview" id="outputPhoto" alt="Aperçu photo">
                 <div class="output-text" id="outputText"></div>
             </div>
-            <button class="btn-copy" id="btnCopy" onclick="copyText()">
-                📋 COPIER LE TEXTE
-            </button>
-            <div class="output-box" style="margin-top: 12px;">
+            <button class="btn-copy" id="btnCopy">📋 COPIER LE TEXTE</button>
+            <div class="output-box" style="margin-top:12px">
                 <div class="output-label"># Hashtags</div>
                 <div class="hashtags-box" id="hashtagsBox"></div>
             </div>
-            <button class="btn-copy-hashtags" onclick="copyHashtags()">
-                📋 Copier les hashtags
-            </button>
+            <button class="btn-copy-htags" id="btnCopyH">📋 Copier les hashtags</button>
         </div>
     </div>
+    <div class="toast" id="toast" role="status" aria-live="polite">✅ Copié !</div>
 
-    <div class="toast" id="toast">✅ Copié !</div>
+<script>
+// =====================================================================
+// DATA
+// =====================================================================
+const MODELS = {
+    Apple: [
+        'iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16','iPhone 16e',
+        'iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15',
+        'iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14',
+        'iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13 Mini','iPhone 13',
+        'iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12 Mini','iPhone 12',
+        'iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11',
+        'iPhone SE (2022)','iPhone SE (2020)',
+        'iPhone XS Max','iPhone XS','iPhone XR',
+        'iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7'
+    ],
+    Samsung: [
+        'Galaxy S25 Ultra','Galaxy S25+','Galaxy S25',
+        'Galaxy S24 Ultra','Galaxy S24+','Galaxy S24','Galaxy S24 FE',
+        'Galaxy S23 Ultra','Galaxy S23+','Galaxy S23','Galaxy S23 FE',
+        'Galaxy S22 Ultra','Galaxy S22+','Galaxy S22',
+        'Galaxy S21 Ultra','Galaxy S21+','Galaxy S21','Galaxy S21 FE',
+        'Galaxy Z Fold 6','Galaxy Z Fold 5','Galaxy Z Fold 4',
+        'Galaxy Z Flip 6','Galaxy Z Flip 5','Galaxy Z Flip 4',
+        'Galaxy Note 20 Ultra','Galaxy Note 20','Galaxy Note 10+','Galaxy Note 10',
+        'Galaxy A56','Galaxy A55','Galaxy A54','Galaxy A53','Galaxy A52',
+        'Galaxy A36','Galaxy A35','Galaxy A34',
+        'Galaxy A25','Galaxy A16','Galaxy A15','Galaxy A05',
+        'Galaxy M35','Galaxy M15'
+    ],
+    Huawei: [
+        'Pura 70 Ultra','Pura 70 Pro','Pura 70',
+        'Mate 60 Pro','Mate 60','Mate 50 Pro','Mate 50',
+        'P60 Pro','P60','P50 Pro','P50',
+        'P40 Pro+','P40 Pro','P40','P40 Lite',
+        'P30 Pro','P30','P30 Lite',
+        'Nova 12','Nova 11','Nova 10','Nova 9'
+    ],
+    Xiaomi: [
+        'Xiaomi 15 Ultra','Xiaomi 15 Pro','Xiaomi 15',
+        'Xiaomi 14 Ultra','Xiaomi 14 Pro','Xiaomi 14',
+        'Xiaomi 13 Ultra','Xiaomi 13 Pro','Xiaomi 13',
+        'Redmi Note 14 Pro+','Redmi Note 14 Pro','Redmi Note 14',
+        'Redmi Note 13 Pro+','Redmi Note 13 Pro','Redmi Note 13',
+        'Redmi Note 12 Pro+','Redmi Note 12 Pro','Redmi Note 12',
+        'Redmi 14','Redmi 13','Redmi 12',
+        'POCO F7 Pro','POCO F7','POCO F6 Pro','POCO F6','POCO F5',
+        'POCO X7 Pro','POCO X7','POCO X6 Pro','POCO X6','POCO X5 Pro','POCO X5',
+        'POCO M6 Pro','POCO M6'
+    ],
+    Oppo: [
+        'Find X7 Ultra','Find X7','Find X6 Pro','Find X5 Pro',
+        'Reno 12 Pro','Reno 12','Reno 11 Pro','Reno 11','Reno 10 Pro+','Reno 10 Pro','Reno 10',
+        'A98','A78','A58','A38','A18'
+    ],
+    Realme: ['GT 5 Pro','GT 5','GT Neo 5','12 Pro+','12 Pro','12','11 Pro+','11 Pro','11','C67','C55','C53'],
+    OnePlus: ['13','12','12R','11','11R','Nord 4','Nord 3','Nord CE 4','Nord CE 3','10 Pro','10T','9 Pro','9'],
+    Google: ['Pixel 9 Pro XL','Pixel 9 Pro','Pixel 9','Pixel 9a','Pixel 8 Pro','Pixel 8','Pixel 8a','Pixel 7 Pro','Pixel 7','Pixel 7a','Pixel 6 Pro','Pixel 6','Pixel 6a'],
+    Honor: ['Magic 7 Pro','Magic 7','Magic 6 Pro','Magic 6','Magic 5 Pro','200 Pro','200','90','90 Lite','X9b','X8b','X7b'],
+    Nothing: ['Phone (2a) Plus','Phone (2a)','Phone (2)','Phone (1)'],
+    Tecno: ['Phantom X2 Pro','Phantom X2','Camon 30 Pro','Camon 30','Camon 20 Pro','Camon 20','Spark 20 Pro+','Spark 20 Pro','Spark 20','Pova 6 Pro','Pova 6','Pova 5'],
+    Infinix: ['Zero 30','Zero Ultra','Note 40 Pro','Note 40','Note 30 Pro','Note 30','Hot 40 Pro','Hot 40','Hot 30','Smart 8'],
+    Autre: []
+};
 
-    <script>
-    // ===== MODELS DATABASE =====
-    const models = {
-        Apple: [
-            'iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16',
-            'iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15',
-            'iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14',
-            'iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13 Mini','iPhone 13',
-            'iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12 Mini','iPhone 12',
-            'iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11',
-            'iPhone SE (2022)','iPhone SE (2020)',
-            'iPhone XS Max','iPhone XS','iPhone XR',
-            'iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7'
-        ],
-        Samsung: [
-            'Galaxy S25 Ultra','Galaxy S25+','Galaxy S25',
-            'Galaxy S24 Ultra','Galaxy S24+','Galaxy S24','Galaxy S24 FE',
-            'Galaxy S23 Ultra','Galaxy S23+','Galaxy S23','Galaxy S23 FE',
-            'Galaxy S22 Ultra','Galaxy S22+','Galaxy S22',
-            'Galaxy S21 Ultra','Galaxy S21+','Galaxy S21','Galaxy S21 FE',
-            'Galaxy Z Fold 6','Galaxy Z Fold 5','Galaxy Z Fold 4',
-            'Galaxy Z Flip 6','Galaxy Z Flip 5','Galaxy Z Flip 4',
-            'Galaxy Note 20 Ultra','Galaxy Note 20','Galaxy Note 10+','Galaxy Note 10',
-            'Galaxy A55','Galaxy A54','Galaxy A53','Galaxy A52',
-            'Galaxy A35','Galaxy A34','Galaxy A25','Galaxy A15','Galaxy A05'
-        ],
-        Huawei: [
-            'Pura 70 Ultra','Pura 70 Pro','Pura 70',
-            'Mate 60 Pro','Mate 60','Mate 50 Pro','Mate 50',
-            'P60 Pro','P60','P50 Pro','P50',
-            'P40 Pro+','P40 Pro','P40','P40 Lite',
-            'P30 Pro','P30','P30 Lite',
-            'Nova 12','Nova 11','Nova 10','Nova 9'
-        ],
-        Xiaomi: [
-            'Xiaomi 14 Ultra','Xiaomi 14 Pro','Xiaomi 14',
-            'Xiaomi 13 Ultra','Xiaomi 13 Pro','Xiaomi 13',
-            'Redmi Note 13 Pro+','Redmi Note 13 Pro','Redmi Note 13',
-            'Redmi Note 12 Pro+','Redmi Note 12 Pro','Redmi Note 12',
-            'Redmi 13','Redmi 12',
-            'POCO X6 Pro','POCO X6','POCO X5 Pro','POCO X5',
-            'POCO F6 Pro','POCO F6','POCO F5',
-            'POCO M6 Pro','POCO M6'
-        ],
-        Oppo: [
-            'Find X7 Ultra','Find X7','Find X6 Pro','Find X5 Pro',
-            'Reno 11 Pro','Reno 11','Reno 10 Pro+','Reno 10 Pro','Reno 10',
-            'A98','A78','A58','A38','A18'
-        ],
-        Realme: ['GT 5 Pro','GT 5','GT Neo 5','12 Pro+','12 Pro','12','11 Pro+','11 Pro','11','C67','C55','C53'],
-        OnePlus: ['12','12R','11','11R','Nord 4','Nord 3','Nord CE 4','Nord CE 3','10 Pro','10T','9 Pro','9'],
-        Google: ['Pixel 9 Pro XL','Pixel 9 Pro','Pixel 9','Pixel 8 Pro','Pixel 8','Pixel 8a','Pixel 7 Pro','Pixel 7','Pixel 7a','Pixel 6 Pro','Pixel 6','Pixel 6a'],
-        Honor: ['Magic 6 Pro','Magic 6','Magic 5 Pro','200 Pro','200','90','90 Lite','X9b','X8b','X7b'],
-        Nothing: ['Phone (2a) Plus','Phone (2a)','Phone (2)','Phone (1)'],
-        Tecno: ['Phantom X2 Pro','Phantom X2','Camon 30 Pro','Camon 30','Camon 20 Pro','Camon 20','Spark 20 Pro+','Spark 20 Pro','Spark 20','Pova 6 Pro','Pova 6','Pova 5'],
-        Infinix: ['Zero 30','Zero Ultra','Note 40 Pro','Note 40','Note 30 Pro','Note 30','Hot 40 Pro','Hot 40','Hot 30','Smart 8'],
-        Autre: []
+// Price reference: occasion "Excellent" 128GB (DH)
+const PRICE_REF = {
+    // Apple
+    'iPhone 16 Pro Max':{min:14000,max:19000},'iPhone 16 Pro':{min:12000,max:16000},
+    'iPhone 16 Plus':{min:10000,max:13000},'iPhone 16':{min:9000,max:12000},'iPhone 16e':{min:5500,max:8000},
+    'iPhone 15 Pro Max':{min:11000,max:16000},'iPhone 15 Pro':{min:9500,max:13500},
+    'iPhone 15 Plus':{min:8000,max:11000},'iPhone 15':{min:7000,max:10000},
+    'iPhone 14 Pro Max':{min:8500,max:12500},'iPhone 14 Pro':{min:7500,max:11000},
+    'iPhone 14 Plus':{min:6000,max:8500},'iPhone 14':{min:5500,max:8000},
+    'iPhone 13 Pro Max':{min:7000,max:10500},'iPhone 13 Pro':{min:6000,max:9000},
+    'iPhone 13 Mini':{min:4000,max:6000},'iPhone 13':{min:4500,max:7000},
+    'iPhone 12 Pro Max':{min:5500,max:8000},'iPhone 12 Pro':{min:4500,max:7000},
+    'iPhone 12 Mini':{min:3000,max:4500},'iPhone 12':{min:3500,max:5500},
+    'iPhone 11 Pro Max':{min:4500,max:6500},'iPhone 11 Pro':{min:3800,max:5500},
+    'iPhone 11':{min:2800,max:4500},
+    'iPhone SE (2022)':{min:2500,max:4000},'iPhone SE (2020)':{min:1800,max:3000},
+    'iPhone XS Max':{min:3000,max:4500},'iPhone XS':{min:2500,max:3800},'iPhone XR':{min:2000,max:3200},
+    'iPhone X':{min:2000,max:3200},'iPhone 8 Plus':{min:1500,max:2500},'iPhone 8':{min:1200,max:2000},
+    'iPhone 7 Plus':{min:1200,max:2000},'iPhone 7':{min:900,max:1500},
+    // Samsung
+    'Galaxy S25 Ultra':{min:12000,max:17000},'Galaxy S25+':{min:9000,max:13000},'Galaxy S25':{min:7500,max:11000},
+    'Galaxy S24 Ultra':{min:10000,max:15000},'Galaxy S24+':{min:7500,max:11000},'Galaxy S24':{min:6000,max:9500},
+    'Galaxy S24 FE':{min:4500,max:7000},
+    'Galaxy S23 Ultra':{min:8000,max:12000},'Galaxy S23+':{min:5500,max:8500},'Galaxy S23':{min:4500,max:7500},
+    'Galaxy S23 FE':{min:3500,max:5500},
+    'Galaxy S22 Ultra':{min:6000,max:9500},'Galaxy S22+':{min:4000,max:6500},'Galaxy S22':{min:3500,max:5500},
+    'Galaxy S21 Ultra':{min:5000,max:8000},'Galaxy S21+':{min:3500,max:5500},'Galaxy S21':{min:3000,max:4800},
+    'Galaxy S21 FE':{min:2500,max:4000},
+    'Galaxy Z Fold 6':{min:14000,max:20000},'Galaxy Z Fold 5':{min:10000,max:16000},'Galaxy Z Fold 4':{min:7000,max:12000},
+    'Galaxy Z Flip 6':{min:8000,max:12000},'Galaxy Z Flip 5':{min:5500,max:9000},'Galaxy Z Flip 4':{min:4000,max:6500},
+    'Galaxy Note 20 Ultra':{min:4500,max:7000},'Galaxy Note 20':{min:3000,max:5000},
+    'Galaxy Note 10+':{min:2800,max:4200},'Galaxy Note 10':{min:2200,max:3500},
+    'Galaxy A56':{min:3000,max:4500},'Galaxy A55':{min:2800,max:4200},'Galaxy A54':{min:2200,max:3500},
+    'Galaxy A53':{min:1800,max:2800},'Galaxy A52':{min:1500,max:2500},
+    'Galaxy A36':{min:2300,max:3500},'Galaxy A35':{min:2200,max:3200},'Galaxy A34':{min:1800,max:2800},
+    'Galaxy A25':{min:1500,max:2300},'Galaxy A16':{min:1300,max:2000},'Galaxy A15':{min:1200,max:1800},
+    'Galaxy A05':{min:800,max:1300},'Galaxy M35':{min:2000,max:3000},'Galaxy M15':{min:1200,max:1800},
+    // Huawei
+    'Pura 70 Ultra':{min:7000,max:10000},'Pura 70 Pro':{min:5500,max:8000},'Pura 70':{min:4000,max:6500},
+    'Mate 60 Pro':{min:6000,max:9000},'Mate 60':{min:4500,max:7000},
+    'Mate 50 Pro':{min:4000,max:6000},'Mate 50':{min:3000,max:5000},
+    'P60 Pro':{min:3500,max:5500},'P60':{min:2800,max:4500},
+    'P50 Pro':{min:3000,max:4800},'P50':{min:2500,max:4000},
+    'P40 Pro+':{min:2800,max:4200},'P40 Pro':{min:2200,max:3500},'P40':{min:1800,max:2800},'P40 Lite':{min:1200,max:2000},
+    'P30 Pro':{min:1800,max:3000},'P30':{min:1500,max:2500},'P30 Lite':{min:1000,max:1800},
+    'Nova 12':{min:2000,max:3200},'Nova 11':{min:1800,max:2800},'Nova 10':{min:1500,max:2500},'Nova 9':{min:1200,max:2000},
+    // Xiaomi
+    'Xiaomi 15 Ultra':{min:7500,max:11000},'Xiaomi 15 Pro':{min:6000,max:9000},'Xiaomi 15':{min:5000,max:7500},
+    'Xiaomi 14 Ultra':{min:7000,max:11000},'Xiaomi 14 Pro':{min:5500,max:8500},'Xiaomi 14':{min:4500,max:7000},
+    'Xiaomi 13 Ultra':{min:5500,max:8500},'Xiaomi 13 Pro':{min:4000,max:6500},'Xiaomi 13':{min:3000,max:5000},
+    'Redmi Note 14 Pro+':{min:2800,max:4200},'Redmi Note 14 Pro':{min:2200,max:3500},'Redmi Note 14':{min:1600,max:2600},
+    'Redmi Note 13 Pro+':{min:2500,max:3800},'Redmi Note 13 Pro':{min:2000,max:3200},'Redmi Note 13':{min:1500,max:2500},
+    'Redmi Note 12 Pro+':{min:2200,max:3200},'Redmi Note 12 Pro':{min:1800,max:2800},'Redmi Note 12':{min:1300,max:2200},
+    'Redmi 14':{min:1200,max:1800},'Redmi 13':{min:1100,max:1700},'Redmi 12':{min:1000,max:1600},
+    'POCO F7 Pro':{min:4000,max:6000},'POCO F7':{min:3000,max:4500},
+    'POCO F6 Pro':{min:3500,max:5500},'POCO F6':{min:2500,max:4000},'POCO F5':{min:2000,max:3200},
+    'POCO X7 Pro':{min:2500,max:3800},'POCO X7':{min:2000,max:3000},
+    'POCO X6 Pro':{min:2200,max:3500},'POCO X6':{min:1800,max:2800},
+    'POCO X5 Pro':{min:1800,max:2800},'POCO X5':{min:1500,max:2300},
+    'POCO M6 Pro':{min:1500,max:2300},'POCO M6':{min:1200,max:1800},
+    // Oppo
+    'Find X7 Ultra':{min:5500,max:8500},'Find X7':{min:4000,max:6500},
+    'Find X6 Pro':{min:3500,max:5500},'Find X5 Pro':{min:3000,max:4800},
+    'Reno 12 Pro':{min:3000,max:4500},'Reno 12':{min:2200,max:3500},
+    'Reno 11 Pro':{min:2800,max:4200},'Reno 11':{min:2200,max:3500},
+    'Reno 10 Pro+':{min:2500,max:3800},'Reno 10 Pro':{min:2000,max:3200},'Reno 10':{min:1800,max:2800},
+    'A98':{min:1800,max:2800},'A78':{min:1500,max:2300},'A58':{min:1200,max:2000},'A38':{min:1000,max:1600},'A18':{min:800,max:1300},
+    // Realme
+    'GT 5 Pro':{min:3000,max:4500},'GT 5':{min:2500,max:3800},'GT Neo 5':{min:2200,max:3500},
+    '12 Pro+':{min:2500,max:3800},'12 Pro':{min:2000,max:3200},'12':{min:1500,max:2500},
+    '11 Pro+':{min:2000,max:3000},'11 Pro':{min:1600,max:2500},'11':{min:1300,max:2000},
+    'C67':{min:1000,max:1600},'C55':{min:900,max:1400},'C53':{min:800,max:1300},
+    // OnePlus
+    '13':{min:5000,max:7500},'12':{min:4000,max:6000},'12R':{min:3000,max:4500},
+    '11':{min:3500,max:5500},'11R':{min:2500,max:4000},
+    'Nord 4':{min:2500,max:3500},'Nord 3':{min:2000,max:3000},
+    'Nord CE 4':{min:1800,max:2800},'Nord CE 3':{min:1500,max:2300},
+    '10 Pro':{min:3000,max:4500},'10T':{min:2500,max:3800},'9 Pro':{min:2500,max:3800},'9':{min:2000,max:3000},
+    // Google
+    'Pixel 9 Pro XL':{min:8000,max:12000},'Pixel 9 Pro':{min:7000,max:10000},'Pixel 9':{min:5500,max:8000},'Pixel 9a':{min:4000,max:6000},
+    'Pixel 8 Pro':{min:5000,max:7500},'Pixel 8':{min:3500,max:5500},'Pixel 8a':{min:3000,max:4500},
+    'Pixel 7 Pro':{min:3500,max:5500},'Pixel 7':{min:2800,max:4200},'Pixel 7a':{min:2500,max:3800},
+    'Pixel 6 Pro':{min:2800,max:4200},'Pixel 6':{min:2200,max:3500},'Pixel 6a':{min:1800,max:2800},
+    // Honor
+    'Magic 7 Pro':{min:5000,max:7500},'Magic 7':{min:4000,max:6000},
+    'Magic 6 Pro':{min:4000,max:6000},'Magic 6':{min:3000,max:4500},'Magic 5 Pro':{min:3500,max:5500},
+    '200 Pro':{min:2500,max:3800},'200':{min:2000,max:3000},'90':{min:1800,max:2800},'90 Lite':{min:1300,max:2000},
+    'X9b':{min:1500,max:2300},'X8b':{min:1200,max:1800},'X7b':{min:1000,max:1500},
+    // Nothing
+    'Phone (2a) Plus':{min:2200,max:3500},'Phone (2a)':{min:1800,max:2800},'Phone (2)':{min:2500,max:3800},'Phone (1)':{min:2000,max:3000},
+    // Tecno
+    'Phantom X2 Pro':{min:2500,max:3800},'Phantom X2':{min:2000,max:3000},
+    'Camon 30 Pro':{min:1800,max:2800},'Camon 30':{min:1500,max:2300},'Camon 20 Pro':{min:1500,max:2300},'Camon 20':{min:1200,max:1800},
+    'Spark 20 Pro+':{min:1200,max:2000},'Spark 20 Pro':{min:1000,max:1600},'Spark 20':{min:800,max:1300},
+    'Pova 6 Pro':{min:1300,max:2100},'Pova 6':{min:1100,max:1700},'Pova 5':{min:900,max:1400},
+    // Infinix
+    'Zero 30':{min:2000,max:3000},'Zero Ultra':{min:2200,max:3500},
+    'Note 40 Pro':{min:1500,max:2300},'Note 40':{min:1200,max:1800},'Note 30 Pro':{min:1300,max:2000},'Note 30':{min:1100,max:1700},
+    'Hot 40 Pro':{min:1000,max:1600},'Hot 40':{min:800,max:1300},'Hot 30':{min:700,max:1100},
+    'Smart 8':{min:700,max:1100}
+};
+
+const STORAGE_MULT = {'32GB':0.8,'64GB':0.9,'128GB':1,'256GB':1.15,'512GB':1.3,'1TB':1.5};
+const COND_MULT = {'Neuf':1.25,'Comme neuf':1.1,'Excellent':1,'Très bon':0.9,'Bon':0.8,'Correct':0.65};
+const COND_BAT = {'Neuf':98,'Comme neuf':92,'Excellent':85,'Très bon':80,'Bon':75,'Correct':0};
+
+// Model release year (approximate)
+function getModelYear(brand, model) {
+    if (brand === 'Apple') {
+        if (/16/.test(model)) return 2024;
+        if (/15/.test(model)) return 2023;
+        if (/14/.test(model)) return 2022;
+        if (/13/.test(model)) return 2021;
+        if (/12/.test(model)) return 2020;
+        if (/11/.test(model)) return 2019;
+        if (/SE \(2022\)/.test(model)) return 2022;
+        if (/SE \(2020\)/.test(model)) return 2020;
+        if (/X[SR]/.test(model) || model === 'iPhone X') return 2017;
+        if (/8/.test(model)) return 2017;
+        if (/7/.test(model)) return 2016;
+    }
+    if (brand === 'Samsung') {
+        if (/S25|A56|A36|A16|M35/.test(model)) return 2025;
+        if (/S24|Fold 6|Flip 6|A55|A35|A25|A15/.test(model)) return 2024;
+        if (/S23|Fold 5|Flip 5|A54|A34/.test(model)) return 2023;
+        if (/S22|Fold 4|Flip 4|A53|A52/.test(model)) return 2022;
+        if (/S21/.test(model)) return 2021;
+        if (/Note 20/.test(model)) return 2020;
+        if (/Note 10/.test(model)) return 2019;
+    }
+    return 2024; // default recent
+}
+
+// Dynamic storage options
+function getStorageOptions(brand, model) {
+    if (brand === 'Apple') {
+        if (/Pro/.test(model) && /1[56]/.test(model)) return ['128GB','256GB','512GB','1TB'];
+        if (/Pro/.test(model)) return ['128GB','256GB','512GB','1TB'];
+        if (/16e|SE|XR/.test(model)) return ['128GB','256GB','512GB'];
+        if (/1[3-6]/.test(model)) return ['128GB','256GB','512GB'];
+        if (/12|11/.test(model)) return ['64GB','128GB','256GB'];
+        return ['32GB','64GB','128GB','256GB'];
+    }
+    if (brand === 'Samsung') {
+        if (/Ultra|Fold/.test(model)) return ['256GB','512GB','1TB'];
+        if (/Flip/.test(model)) return ['128GB','256GB','512GB'];
+        if (/A05|A15|A16|M15/.test(model)) return ['64GB','128GB'];
+        if (/S2/.test(model)) return ['128GB','256GB','512GB'];
+        return ['64GB','128GB','256GB'];
+    }
+    return ['32GB','64GB','128GB','256GB','512GB','1TB'];
+}
+
+// Dynamic color options
+function getColorOptions(brand, model) {
+    if (brand === 'Apple') {
+        if (/16 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Désert'];
+        if (/15 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Bleu'];
+        if (/16e/.test(model)) return ['Noir','Blanc','Bleu'];
+        if (/16/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rose'];
+        if (/15/.test(model)) return ['Noir','Bleu','Vert','Jaune','Rose'];
+        if (/14 Pro/.test(model)) return ['Noir Sidéral','Argent','Or','Violet Intense'];
+        if (/14/.test(model)) return ['Minuit','Lumière Stellaire','Bleu','Violet','Rouge','Jaune'];
+        if (/13 Pro/.test(model)) return ['Graphite','Or','Argent','Bleu Alpin','Vert Alpin'];
+        if (/13/.test(model)) return ['Minuit','Lumière Stellaire','Bleu','Rose','Rouge','Vert'];
+        if (/12 Pro/.test(model)) return ['Graphite','Or','Argent','Bleu Pacifique'];
+        if (/12/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rouge','Violet'];
+        return ['Noir','Blanc','Bleu','Rouge','Or','Argent','Rose'];
+    }
+    if (brand === 'Samsung') {
+        if (/S25 Ultra/.test(model)) return ['Titanium Black','Titanium Gray','Titanium Blue','Titanium Silver'];
+        if (/S25/.test(model)) return ['Navy','Icy Blue','Silver Shadow','Mint'];
+        if (/S24 Ultra/.test(model)) return ['Titanium Black','Titanium Gray','Titanium Violet','Titanium Yellow'];
+        if (/S24/.test(model)) return ['Onyx Black','Marble Gray','Cobalt Violet','Amber Yellow'];
+        if (/Fold|Flip/.test(model)) return ['Noir','Bleu','Cream','Gris','Lavande'];
+        if (/A5|A3/.test(model)) return ['Noir','Bleu','Violet','Bleu Clair','Lilas'];
+        return ['Noir','Blanc','Bleu','Vert','Violet','Cream'];
+    }
+    if (brand === 'Huawei') return ['Noir','Blanc','Bleu','Vert','Or','Violet'];
+    if (brand === 'Xiaomi') return ['Noir','Blanc','Bleu','Vert','Violet','Argent'];
+    return ['Noir','Blanc','Bleu','Rouge','Vert','Rose','Violet','Gold','Argent','Gris'];
+}
+
+// =====================================================================
+// COHERENCE ENGINE
+// =====================================================================
+function checkCoherence(d) {
+    const alerts = [];
+    let score = 100;
+    const p = parseInt(d.price);
+    const ref = PRICE_REF[d.model];
+    const bat = d.battery === '79-' ? 75 : parseInt(d.battery);
+
+    // Photo
+    if (!d.hasPhoto) { score -= 15; alerts.push({type:'critical',icon:'📷',text:'Pas de photo ! Un post sans photo sera ignoré sur Instagram.'}); }
+
+    // Missing fields
+    if (!d.battery) { score -= 5; alerts.push({type:'warning',icon:'🔋',text:'Batterie non renseignée — les acheteurs veulent toujours savoir.'}); }
+    if (!d.condition) { score -= 5; alerts.push({type:'warning',icon:'📊',text:'État non renseigné — info essentielle pour la vente.'}); }
+    if (!d.version) { score -= 3; alerts.push({type:'info',icon:'🌍',text:'Version non précisée — les clients demandent toujours.'}); }
+    if (!d.storage) { score -= 5; alerts.push({type:'warning',icon:'💾',text:'Stockage non renseigné — critère clé du prix.'}); }
+    if (!d.color) { score -= 2; alerts.push({type:'info',icon:'🎨',text:'Couleur non précisée.'}); }
+    if (!d.shop) { score -= 3; alerts.push({type:'info',icon:'🏪',text:'Pas de boutique — le client ne saura pas où venir.'}); }
+    if (!d.phone) { score -= 5; alerts.push({type:'warning',icon:'📞',text:'Pas de numéro de contact !'}); }
+
+    // Face ID / Screen for used phones
+    if (d.brand === 'Apple' && !d.faceid && d.condition !== 'Neuf') {
+        score -= 3; alerts.push({type:'info',icon:'🔐',text:'Précise si Face ID fonctionne — les clients le demandent systématiquement.'});
+    }
+    if (!d.screen && d.condition && d.condition !== 'Neuf') {
+        score -= 3; alerts.push({type:'info',icon:'📱',text:'Précise si l\'écran est original — ça rassure le client.'});
+    }
+
+    // iCloud still connected
+    if (d.icloud === 'Connecté') {
+        score -= 15; alerts.push({type:'critical',icon:'☁️',text:'iCloud/FRP encore connecté ! Ne publie PAS avant de déconnecter le compte.'});
+    }
+
+    // Price vs model
+    if (ref && p) {
+        let adjMin = ref.min, adjMax = ref.max;
+        if (d.storage && STORAGE_MULT[d.storage]) { adjMin = Math.round(adjMin * STORAGE_MULT[d.storage]); adjMax = Math.round(adjMax * STORAGE_MULT[d.storage]); }
+        if (d.condition && COND_MULT[d.condition]) { adjMin = Math.round(adjMin * COND_MULT[d.condition]); adjMax = Math.round(adjMax * COND_MULT[d.condition]); }
+        // Face ID broken = -15% value
+        if (d.faceid === 'Ne fonctionne pas') { adjMax = Math.round(adjMax * 0.85); }
+        // Screen copy = -10%
+        if (d.screen === 'Changé (copie)') { adjMax = Math.round(adjMax * 0.9); }
+
+        if (p < adjMin * 0.6) { score -= 25; alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS bas (${p} DH) pour un ${d.model}. Fourchette : ${adjMin}-${adjMax} DH. Le client va douter.`}); }
+        else if (p < adjMin * 0.85) { score -= 10; alerts.push({type:'warning',icon:'💰',text:`Prix bas (${p} DH). Fourchette : ${adjMin}-${adjMax} DH. Bon deal ou erreur ?`}); }
+        else if (p > adjMax * 1.4) { score -= 20; alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS élevé (${p} DH). Fourchette : ${adjMin}-${adjMax} DH. Ça ne se vendra pas.`}); }
+        else if (p > adjMax * 1.15) { score -= 8; alerts.push({type:'warning',icon:'📈',text:`Prix au-dessus du marché (${p} DH). Fourchette : ${adjMin}-${adjMax} DH.`}); }
+        else { alerts.push({type:'ok',icon:'✅',text:`Prix cohérent (fourchette : ${adjMin}-${adjMax} DH).`}); }
+    } else if (p && !ref) {
+        if (p < 500) { score -= 15; alerts.push({type:'critical',icon:'🚨',text:`Prix ${p} DH trop bas pour un smartphone.`}); }
+        else if (p > 25000) { score -= 10; alerts.push({type:'warning',icon:'📈',text:`Prix ${p} DH — très peu de téléphones valent autant en occasion.`}); }
+    }
+
+    // Battery vs condition
+    if (d.battery && d.condition) {
+        const expMin = COND_BAT[d.condition];
+        if (bat < expMin) { score -= 12; alerts.push({type:'critical',icon:'🔋',text:`Batterie ${bat}% trop basse pour "${d.condition}". Minimum attendu : ${expMin}%.`}); }
+        if (d.condition === 'Neuf' && bat < 100) { score -= 8; alerts.push({type:'warning',icon:'🆕',text:'"Neuf sous blister" devrait avoir 100% de batterie.'}); }
+    }
+
+    // "Neuf" checks
+    if (d.condition === 'Neuf') {
+        if (!d.accessories.includes("Boîte d'origine")) { score -= 8; alerts.push({type:'warning',icon:'📦',text:'"Neuf" sans boîte d\'origine ? Suspect.'}); }
+        if (!d.accessories.includes('Chargeur')) { score -= 5; alerts.push({type:'warning',icon:'🔌',text:'"Neuf" sans chargeur ? Pense à cocher.'}); }
+        // Old model + Neuf
+        const year = getModelYear(d.brand, d.model);
+        if (2026 - year >= 3) { score -= 10; alerts.push({type:'warning',icon:'📅',text:`"Neuf sous blister" pour un modèle de ${year} ? C'est très suspect en 2026.`}); }
+        // Screen can't be changed if Neuf
+        if (d.screen && d.screen !== 'Original') { score -= 15; alerts.push({type:'critical',icon:'📱',text:'"Neuf" mais écran changé — c\'est contradictoire !'}); }
+    }
+
+    // Screen copy + high condition
+    if (d.screen === 'Changé (copie)' && (d.condition === 'Comme neuf' || d.condition === 'Excellent')) {
+        score -= 8; alerts.push({type:'warning',icon:'📱',text:`Écran copie + état "${d.condition}" — change l'état en "Très bon" ou "Bon".`});
+    }
+
+    // Face ID broken + high price
+    if (d.faceid === 'Ne fonctionne pas' && ref && p > ref.max) {
+        score -= 10; alerts.push({type:'warning',icon:'🔐',text:'Face ID cassé mais prix au-dessus du marché — baisse le prix.'});
+    }
+
+    // Promo checks
+    if (d.hasPromo && d.oldPrice) {
+        const op = parseInt(d.oldPrice);
+        if (isNaN(op) || op <= 0) { score -= 10; alerts.push({type:'critical',icon:'🏷️',text:'Ancien prix invalide.'}); }
+        else if (op <= p) { score -= 20; alerts.push({type:'critical',icon:'🏷️',text:`Ancien prix (${op} DH) ≤ nouveau prix (${p} DH) !`}); }
+        else {
+            const disc = Math.round(((op - p) / op) * 100);
+            if (disc > 40) { score -= 10; alerts.push({type:'warning',icon:'🏷️',text:`Réduction de ${disc}% — exagéré, le client va se méfier.`}); }
+            else if (disc < 5) { score -= 5; alerts.push({type:'info',icon:'🏷️',text:`Réduction de ${disc}% seulement — autant ne pas afficher de promo.`}); }
+            else { alerts.push({type:'ok',icon:'🏷️',text:`Réduction de ${disc}% — crédible et attractif.`}); }
+            // Old price vs market
+            if (ref) {
+                let mMax = ref.max;
+                if (d.storage && STORAGE_MULT[d.storage]) mMax = Math.round(mMax * STORAGE_MULT[d.storage]);
+                if (d.condition && COND_MULT[d.condition]) mMax = Math.round(mMax * COND_MULT[d.condition]);
+                if (op > mMax * 1.5) { score -= 8; alerts.push({type:'warning',icon:'🏷️',text:`Ancien prix (${op} DH) bien au-dessus du marché (max ~${mMax} DH). Fausse promo ?`}); }
+            }
+        }
+    }
+
+    // Apple + RAM
+    if (d.brand === 'Apple' && d.ram) { score -= 3; alerts.push({type:'info',icon:'⚡',text:'Apple ne communique pas la RAM — inutile pour un iPhone.'}); }
+    // Apple US + Double SIM
+    if (d.brand === 'Apple' && d.sim === 'Double SIM' && d.version === 'US') { score -= 5; alerts.push({type:'info',icon:'📶',text:'iPhones US sont eSIM only (pas de 2e SIM physique). Vérifie.'}); }
+    // Operator locked
+    if (d.unlock === 'Bloqué opérateur') { score -= 3; alerts.push({type:'warning',icon:'🔓',text:'Téléphone bloqué opérateur — mentionne-le clairement, ça impacte le prix.'}); }
+
+    return { score: Math.max(0, Math.min(100, score)), alerts };
+}
+
+// =====================================================================
+// UI LOGIC
+// =====================================================================
+const $ = id => document.getElementById(id);
+let currentPhotoURL = null;
+
+function updateModels() {
+    const brand = $('brand').value;
+    const ms = $('model');
+    ms.innerHTML = '<option value="">-- Choisir --</option>';
+    if (brand && MODELS[brand]) {
+        MODELS[brand].forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; ms.appendChild(o); });
+    }
+    $('customModelWrap').classList.toggle('visible', brand === 'Autre');
+    updateStorage(); updateColors();
+}
+
+function updateStorage() {
+    const brand = $('brand').value, model = $('model').value;
+    const sel = $('storage'), prev = sel.value;
+    const opts = (brand && model) ? getStorageOptions(brand, model) : ['32GB','64GB','128GB','256GB','512GB','1TB'];
+    sel.innerHTML = '<option value="">--</option>';
+    opts.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s.replace('GB',' GB').replace('TB',' TB'); sel.appendChild(o); });
+    if (opts.includes(prev)) sel.value = prev;
+}
+
+function updateColors() {
+    const brand = $('brand').value, model = $('model').value;
+    const sel = $('color'), prev = sel.value;
+    const opts = (brand) ? getColorOptions(brand, model || '') : ['Noir','Blanc','Bleu','Rouge','Vert','Rose','Violet','Gold','Argent','Gris'];
+    sel.innerHTML = '<option value="">--</option>';
+    opts.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    if (opts.includes(prev)) sel.value = prev;
+}
+
+// Events
+$('brand').addEventListener('change', updateModels);
+$('model').addEventListener('change', () => { updateStorage(); updateColors(); });
+
+// Photo
+$('photoUpload').addEventListener('click', () => $('photoInput').click());
+$('photoRemove').addEventListener('click', e => { e.stopPropagation(); removePhoto(); });
+
+$('photoInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    if (currentPhotoURL) URL.revokeObjectURL(currentPhotoURL);
+    currentPhotoURL = URL.createObjectURL(file);
+    const upload = $('photoUpload');
+    const img = upload.querySelector('img') || document.createElement('img');
+    img.src = currentPhotoURL; img.alt = 'Photo du téléphone';
+    if (!img.parentElement) upload.insertBefore(img, upload.firstChild);
+    upload.classList.add('has-photo');
+    // Reset input so same file can be re-selected
+    this.value = '';
+});
+
+function removePhoto() {
+    if (currentPhotoURL) { URL.revokeObjectURL(currentPhotoURL); currentPhotoURL = null; }
+    const upload = $('photoUpload');
+    const img = upload.querySelector('img');
+    if (img) img.remove();
+    upload.classList.remove('has-photo');
+}
+
+// Checkboxes
+document.querySelectorAll('.cb-item').forEach(el => {
+    el.addEventListener('click', () => {
+        const cb = el.querySelector('input');
+        cb.checked = !cb.checked;
+        el.classList.toggle('checked', cb.checked);
+    });
+});
+
+// Promo toggle
+$('promoToggle').addEventListener('click', function() {
+    const active = this.getAttribute('aria-checked') === 'true';
+    this.setAttribute('aria-checked', !active);
+    $('promoField').classList.toggle('visible', !active);
+});
+$('promoToggle').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+});
+
+// Template tabs
+document.querySelectorAll('.template-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.template-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); t.tabIndex = -1; });
+        this.classList.add('active'); this.setAttribute('aria-selected','true'); this.tabIndex = 0;
+    });
+    tab.addEventListener('keydown', function(e) {
+        const tabs = [...document.querySelectorAll('.template-tab')];
+        const idx = tabs.indexOf(this);
+        let next = -1;
+        if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+        if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+        if (next >= 0) { e.preventDefault(); tabs[next].click(); tabs[next].focus(); }
+    });
+});
+
+// Generate
+$('btnGenerate').addEventListener('click', generatePost);
+$('btnCopy').addEventListener('click', () => doCopy($('outputText').textContent, $('btnCopy')));
+$('btnCopyH').addEventListener('click', () => doCopy($('hashtagsBox').textContent));
+
+const VER_EMOJI = {'Europe':'🇪🇺','Global':'🌍','US':'🇺🇸','Moyen-Orient':'🌙','Chine':'🇨🇳'};
+const COND_EMOJI = {'Neuf':'🆕','Comme neuf':'✨','Excellent':'🌟','Très bon':'👌','Bon':'👍','Correct':'✔️'};
+const SHOP_INFO = {'M1':'📍 Corner Mobile — CC Aït Baha, Rabat','M2':'📍 Corner Mobile — CC Oued Dahab, Rabat'};
+
+function fmtPhone(n) { return n ? n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5') : ''; }
+function fmtPrice(p) { return p.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+function generatePost() {
+    const brand = $('brand').value;
+    const model = brand === 'Autre' ? $('customModel').value.trim() : $('model').value;
+    const storage = $('storage').value;
+    const color = $('color').value;
+    const ram = $('ram').value;
+    const battery = $('battery').value;
+    const condition = $('condition').value;
+    const version = $('version').value;
+    const sim = $('sim').value;
+    const unlock = $('unlock').value;
+    const faceid = $('faceid').value;
+    const screen = $('screen').value;
+    const warranty = $('warranty').value;
+    const icloud = $('icloud').value;
+    const price = $('price').value;
+    const oldPrice = $('oldPrice').value;
+    const shop = $('shop').value;
+    const phone = $('phone').value;
+    const accessories = [...document.querySelectorAll('#accessories input:checked')].map(c => c.value);
+    const template = document.querySelector('.template-tab.active').dataset.template;
+    const promoOn = $('promoToggle').getAttribute('aria-checked') === 'true';
+    const hasPromo = promoOn && oldPrice && parseInt(oldPrice) > 0;
+    const hasPhoto = $('photoUpload').classList.contains('has-photo');
+
+    // Validation
+    if (!brand || !model) { showToast('⚠️ Remplis la marque et le modèle'); return; }
+    const pNum = parseInt(price);
+    if (!price || isNaN(pNum) || pNum <= 0) { showToast('⚠️ Entre un prix valide (> 0 DH)'); return; }
+
+    // Coherence
+    const check = checkCoherence({ brand, model, storage, color, battery, condition, version, sim, unlock, faceid, screen, warranty, icloud, price, oldPrice, hasPromo, hasPhoto, accessories, shop, phone, ram });
+    renderReliability(check);
+
+    // Build post
+    const isApple = brand === 'Apple';
+    const phoneName = `${isApple ? '' : brand + ' '}${model}`;
+    const fullName = `${phoneName}${storage ? ' ' + storage : ''}`;
+    let post = '';
+
+    // Spec lines builder
+    function specLines(prefix, sep) {
+        let lines = [];
+        if (condition) lines.push(`${prefix}État : ${condition}`);
+        if (battery) lines.push(`${prefix}Batterie : ${battery === '79-' ? '< 80' : battery}%`);
+        if (color) lines.push(`${prefix}Couleur : ${color}`);
+        if (storage && sep) lines.push(`${prefix}Stockage : ${storage}`);
+        if (version) lines.push(`${prefix}Version : ${version} ${VER_EMOJI[version]||''}`);
+        if (ram && !isApple) lines.push(`${prefix}RAM : ${ram}`);
+        if (sim) lines.push(`${prefix}${sim}`);
+        if (unlock) lines.push(`${prefix}${unlock}`);
+        if (faceid && faceid !== 'N/A') lines.push(`${prefix}Face ID : ${faceid}`);
+        if (screen) lines.push(`${prefix}Écran : ${screen}`);
+        if (warranty) lines.push(`${prefix}${warranty}`);
+        return lines.join('\n');
+    }
+
+    if (template === 'classic') {
+        post = `📱 ${fullName.toUpperCase()} 📱\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+        if (condition) post += `${COND_EMOJI[condition]||'✅'} État : ${condition}\n`;
+        if (battery) post += `🔋 Batterie : ${battery==='79-'?'< 80':battery}%\n`;
+        if (color) post += `🎨 Couleur : ${color}\n`;
+        if (version) post += `${VER_EMOJI[version]||'🌍'} Version : ${version}\n`;
+        if (ram && !isApple) post += `⚡ RAM : ${ram}\n`;
+        if (sim) post += `📶 ${sim}\n`;
+        if (unlock) post += `🔓 ${unlock}\n`;
+        if (faceid && faceid !== 'N/A') post += `🔐 Face ID : ${faceid}\n`;
+        if (screen) post += `📱 Écran : ${screen}\n`;
+        if (warranty) post += `🛡️ ${warranty}\n`;
+        if (accessories.length) post += `\n🎁 Accessoires : ${accessories.join(' + ')}\n`;
+        post += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+        if (hasPromo) post += `💰 ~${fmtPrice(oldPrice)} DH~ ➜ ${fmtPrice(price)} DH 🔥\n`;
+        else post += `💰 Prix : ${fmtPrice(price)} DH\n`;
+        post += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+        if (shop) post += `${SHOP_INFO[shop]}\n`;
+        if (phone) post += `📞 ${fmtPhone(phone)}\n`;
+        post += `\n⚡ Dépêchez-vous, stock limité !`;
+
+    } else if (template === 'promo') {
+        post = `🔥🔥🔥 OFFRE DE FOLIE 🔥🔥🔥\n\n📱 ${fullName.toUpperCase()}\n\n`;
+        if (hasPromo) {
+            post += `❌ Ancien prix : ${fmtPrice(oldPrice)} DH\n✅ NOUVEAU PRIX : ${fmtPrice(price)} DH 💥\n`;
+            const sav = parseInt(oldPrice) - pNum;
+            if (sav > 0) post += `💸 Tu économises : ${fmtPrice(sav)} DH !\n`;
+        } else post += `💥 PRIX CHOC : ${fmtPrice(price)} DH 💥\n`;
+        post += '\n';
+        if (condition) post += `✅ ${condition}\n`;
+        if (battery) post += `🔋 Batterie ${battery==='79-'?'< 80':battery}%\n`;
+        if (storage) post += `💾 ${storage}\n`;
+        if (color) post += `🎨 ${color}\n`;
+        if (version) post += `${VER_EMOJI[version]||'🌍'} ${version}\n`;
+        if (ram && !isApple) post += `⚡ ${ram} RAM\n`;
+        if (sim) post += `📶 ${sim}\n`;
+        if (faceid && faceid !== 'N/A') post += `🔐 Face ID : ${faceid}\n`;
+        if (screen) post += `📱 Écran ${screen}\n`;
+        if (warranty) post += `🛡️ ${warranty}\n`;
+        if (accessories.length) post += `\n🎁 Avec : ${accessories.join(', ')}\n`;
+        post += `\n📍 Viens le récupérer !\n`;
+        if (shop) post += `${SHOP_INFO[shop]}\n`;
+        if (phone) post += `📞 ${fmtPhone(phone)}\n`;
+        post += `\n⏰ Quantité TRÈS LIMITÉE — premier arrivé, premier servi ! 🏃‍♂️`;
+
+    } else if (template === 'premium') {
+        post = `👑 ${fullName.toUpperCase()} 👑\n═══════════════════\n\n`;
+        post += `Un bijou de technologie disponible chez Corner Mobile.\n\n`;
+        if (condition) post += `▫️ État : ${condition}\n`;
+        if (battery) post += `▫️ Batterie : ${battery==='79-'?'< 80':battery}%\n`;
+        if (storage) post += `▫️ Stockage : ${storage}\n`;
+        if (color) post += `▫️ Couleur : ${color}\n`;
+        if (version) post += `▫️ Version : ${version} ${VER_EMOJI[version]||''}\n`;
+        if (ram && !isApple) post += `▫️ RAM : ${ram}\n`;
+        if (sim) post += `▫️ ${sim}\n`;
+        if (faceid && faceid !== 'N/A') post += `▫️ Face ID : ${faceid}\n`;
+        if (screen) post += `▫️ Écran : ${screen}\n`;
+        if (warranty) post += `▫️ ${warranty}\n`;
+        if (accessories.length) post += `\n🎁 Livré avec : ${accessories.join(' • ')}\n`;
+        post += `\n═══════════════════\n`;
+        if (hasPromo) post += `💎 ${fmtPrice(oldPrice)} DH ➜ ${fmtPrice(price)} DH\n`;
+        else post += `💎 ${fmtPrice(price)} DH\n`;
+        post += `═══════════════════\n\n`;
+        if (shop) post += `${SHOP_INFO[shop]}\n`;
+        if (phone) post += `📞 ${fmtPhone(phone)}\n`;
+        post += `\n✨ La qualité, ça se voit.`;
+
+    } else if (template === 'urgent') {
+        post = `⚡⚡⚡ VENTE FLASH ⚡⚡⚡\n\n📱 ${fullName.toUpperCase()}\n\n`;
+        let det = [];
+        if (condition) det.push(condition);
+        if (battery) det.push(`Bat. ${battery==='79-'?'<80':battery}%`);
+        if (storage) det.push(storage);
+        if (color) det.push(color);
+        if (version) det.push(`${VER_EMOJI[version]||''} ${version}`);
+        if (faceid === 'Fonctionne') det.push('Face ID ✅');
+        if (screen) det.push(`Écran ${screen}`);
+        if (det.length) post += det.join(' | ') + '\n\n';
+        if (accessories.length) post += `🎁 + ${accessories.join(' + ')}\n\n`;
+        if (hasPromo) post += `💰 ${fmtPrice(oldPrice)} ➜ ${fmtPrice(price)} DH\n\n`;
+        else post += `💰 ${fmtPrice(price)} DH\n\n`;
+        if (shop) post += `${SHOP_INFO[shop]}\n`;
+        if (phone) post += `📞 ${fmtPhone(phone)}\n`;
+        post += `\n🏃 FONCE AVANT QU'IL PARTE ! 🏃`;
+
+    } else if (template === 'simple') {
+        post = `${phoneName}${storage ? ' — ' + storage : ''}\n\n`;
+        let lines = [];
+        if (condition) lines.push(`• ${condition}`);
+        if (battery) lines.push(`• Batterie ${battery==='79-'?'< 80':battery}%`);
+        if (color) lines.push(`• ${color}`);
+        if (version) lines.push(`• Version ${version}`);
+        if (ram && !isApple) lines.push(`• ${ram} RAM`);
+        if (sim) lines.push(`• ${sim}`);
+        if (faceid && faceid !== 'N/A') lines.push(`• Face ID : ${faceid}`);
+        if (screen) lines.push(`• Écran ${screen}`);
+        if (warranty) lines.push(`• ${warranty}`);
+        if (lines.length) post += lines.join('\n') + '\n';
+        if (accessories.length) post += `• Avec ${accessories.join(', ')}\n`;
+        post += `\nPrix : ${fmtPrice(price)} DH`;
+        if (hasPromo) post += ` (au lieu de ${fmtPrice(oldPrice)} DH)`;
+        post += '\n\n';
+        if (shop) post += `${SHOP_INFO[shop]}\n`;
+        if (phone) post += `${fmtPhone(phone)}\n`;
+    }
+
+    // Hashtags (20-30 range)
+    const bTag = brand.toLowerCase().replace(/\s/g,'');
+    const mTag = model.toLowerCase().replace(/[\s+()]/g,'').replace(/'/g,'');
+    let h = `#${bTag} #${mTag} #smartphone #occasion #rabat #maroc #morocco #phoneshop #cornermobile #telephone`;
+    if (brand === 'Apple') h += ' #iphone #apple #ios #iphoneonly #iphonemaroc';
+    else if (brand === 'Samsung') h += ' #samsung #galaxy #android #samsungmaroc';
+    else h += ' #android';
+    h += ' #bonplan #prixchoc #hmizat #promo #deal #smartphonemaroc #telephoneoccasion #ventemaroc #bonneaffaire #telephonepascher';
+    if (condition === 'Neuf') h += ' #neuf #new';
+
+    // Display
+    $('outputSection').classList.add('visible');
+    $('outputText').textContent = post;
+    $('hashtagsBox').textContent = h;
+
+    const outPhoto = $('outputPhoto');
+    if (currentPhotoURL) { outPhoto.src = currentPhotoURL; outPhoto.style.display = 'block'; }
+    else { outPhoto.style.display = 'none'; }
+
+    setTimeout(() => $('reliabilitySection').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+}
+
+// Reliability display
+function renderReliability(r) {
+    $('reliabilitySection').classList.add('visible');
+    const gauge = $('gaugeFill');
+    let cls, lbl, status, bg, col;
+    if (r.score >= 80) { cls='score-green'; lbl='Fiable'; status='PRÊT À PUBLIER'; bg='rgba(0,200,83,0.15)'; col='#00c853'; }
+    else if (r.score >= 55) { cls='score-orange'; lbl='À vérifier'; status='VÉRIFIER AVANT DE PUBLIER'; bg='rgba(255,152,0,0.15)'; col='#ff9800'; }
+    else { cls='score-red'; lbl='Problème'; status='NE PAS PUBLIER EN L\'ÉTAT'; bg='rgba(244,67,54,0.15)'; col='#f44336'; }
+
+    gauge.style.stroke = col;
+    gauge.style.strokeDashoffset = 264 - (r.score / 100) * 264;
+    $('scoreText').textContent = r.score; $('scoreText').className = 'gauge-text ' + cls;
+    $('scoreLabel').textContent = lbl; $('scoreLabel').className = 'reliability-label ' + cls;
+    const ss = $('scoreStatus'); ss.textContent = status; ss.style.background = bg; ss.style.color = col;
+
+    const card = $('reliabilityCard');
+    card.className = 'reliability-card ' + (r.score >= 80 ? 'border-green' : r.score >= 55 ? 'border-orange' : 'border-red');
+
+    const al = $('alertsList'); al.innerHTML = '';
+    r.alerts.forEach(a => {
+        const d = document.createElement('div');
+        d.className = 'alert-item alert-' + a.type;
+        const icon = document.createElement('span'); icon.className = 'alert-icon'; icon.textContent = a.icon;
+        const txt = document.createElement('span'); txt.className = 'alert-text'; txt.textContent = a.text;
+        d.appendChild(icon); d.appendChild(txt); al.appendChild(d);
+    });
+}
+
+// Copy with fallback
+function doCopy(text, btn) {
+    const ok = () => {
+        showToast('✅ Copié !');
+        if (btn) { btn.innerHTML = '✅ COPIÉ !'; btn.classList.add('copied'); setTimeout(() => { btn.innerHTML = '📋 COPIER LE TEXTE'; btn.classList.remove('copied'); }, 2000); }
     };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok).catch(() => fallbackCopy(text, ok));
+    } else { fallbackCopy(text, ok); }
+}
 
-    // ===== PRICE REFERENCE DATABASE (DH, occasion "Excellent" 128GB) =====
-    const priceRef = {
-        // Apple — prix marché marocain occasion
-        'iPhone 16 Pro Max': {min:14000, max:19000, tier:'flagship'},
-        'iPhone 16 Pro':     {min:12000, max:16000, tier:'flagship'},
-        'iPhone 16 Plus':    {min:10000, max:13000, tier:'high'},
-        'iPhone 16':         {min:9000,  max:12000, tier:'high'},
-        'iPhone 15 Pro Max': {min:11000, max:16000, tier:'flagship'},
-        'iPhone 15 Pro':     {min:9500,  max:13500, tier:'flagship'},
-        'iPhone 15 Plus':    {min:8000,  max:11000, tier:'high'},
-        'iPhone 15':         {min:7000,  max:10000, tier:'high'},
-        'iPhone 14 Pro Max': {min:8500,  max:12500, tier:'flagship'},
-        'iPhone 14 Pro':     {min:7500,  max:11000, tier:'flagship'},
-        'iPhone 14 Plus':    {min:6000,  max:8500,  tier:'high'},
-        'iPhone 14':         {min:5500,  max:8000,  tier:'high'},
-        'iPhone 13 Pro Max': {min:7000,  max:10500, tier:'flagship'},
-        'iPhone 13 Pro':     {min:6000,  max:9000,  tier:'flagship'},
-        'iPhone 13 Mini':    {min:4000,  max:6000,  tier:'mid'},
-        'iPhone 13':         {min:4500,  max:7000,  tier:'mid'},
-        'iPhone 12 Pro Max': {min:5500,  max:8000,  tier:'high'},
-        'iPhone 12 Pro':     {min:4500,  max:7000,  tier:'high'},
-        'iPhone 12 Mini':    {min:3000,  max:4500,  tier:'mid'},
-        'iPhone 12':         {min:3500,  max:5500,  tier:'mid'},
-        'iPhone 11 Pro Max': {min:4500,  max:6500,  tier:'high'},
-        'iPhone 11 Pro':     {min:3800,  max:5500,  tier:'mid'},
-        'iPhone 11':         {min:2800,  max:4500,  tier:'mid'},
-        'iPhone SE (2022)':  {min:2500,  max:4000,  tier:'budget'},
-        'iPhone SE (2020)':  {min:1800,  max:3000,  tier:'budget'},
-        'iPhone XS Max':     {min:3000,  max:4500,  tier:'mid'},
-        'iPhone XS':         {min:2500,  max:3800,  tier:'mid'},
-        'iPhone XR':         {min:2000,  max:3200,  tier:'budget'},
-        'iPhone X':          {min:2000,  max:3200,  tier:'mid'},
-        'iPhone 8 Plus':     {min:1500,  max:2500,  tier:'budget'},
-        'iPhone 8':          {min:1200,  max:2000,  tier:'budget'},
-        'iPhone 7 Plus':     {min:1200,  max:2000,  tier:'budget'},
-        'iPhone 7':          {min:900,   max:1500,  tier:'budget'},
-        // Samsung
-        'Galaxy S25 Ultra':    {min:12000, max:17000, tier:'flagship'},
-        'Galaxy S25+':         {min:9000,  max:13000, tier:'flagship'},
-        'Galaxy S25':          {min:7500,  max:11000, tier:'high'},
-        'Galaxy S24 Ultra':    {min:10000, max:15000, tier:'flagship'},
-        'Galaxy S24+':         {min:7500,  max:11000, tier:'high'},
-        'Galaxy S24':          {min:6000,  max:9500,  tier:'high'},
-        'Galaxy S24 FE':       {min:4500,  max:7000,  tier:'mid'},
-        'Galaxy S23 Ultra':    {min:8000,  max:12000, tier:'flagship'},
-        'Galaxy S23+':         {min:5500,  max:8500,  tier:'high'},
-        'Galaxy S23':          {min:4500,  max:7500,  tier:'high'},
-        'Galaxy S23 FE':       {min:3500,  max:5500,  tier:'mid'},
-        'Galaxy S22 Ultra':    {min:6000,  max:9500,  tier:'flagship'},
-        'Galaxy S22+':         {min:4000,  max:6500,  tier:'high'},
-        'Galaxy S22':          {min:3500,  max:5500,  tier:'mid'},
-        'Galaxy S21 Ultra':    {min:5000,  max:8000,  tier:'flagship'},
-        'Galaxy S21+':         {min:3500,  max:5500,  tier:'mid'},
-        'Galaxy S21':          {min:3000,  max:4800,  tier:'mid'},
-        'Galaxy S21 FE':       {min:2500,  max:4000,  tier:'mid'},
-        'Galaxy Z Fold 6':     {min:14000, max:20000, tier:'flagship'},
-        'Galaxy Z Fold 5':     {min:10000, max:16000, tier:'flagship'},
-        'Galaxy Z Fold 4':     {min:7000,  max:12000, tier:'flagship'},
-        'Galaxy Z Flip 6':     {min:8000,  max:12000, tier:'high'},
-        'Galaxy Z Flip 5':     {min:5500,  max:9000,  tier:'high'},
-        'Galaxy Z Flip 4':     {min:4000,  max:6500,  tier:'mid'},
-        'Galaxy Note 20 Ultra':{min:4500,  max:7000,  tier:'high'},
-        'Galaxy Note 20':      {min:3000,  max:5000,  tier:'mid'},
-        'Galaxy Note 10+':     {min:2800,  max:4200,  tier:'mid'},
-        'Galaxy Note 10':      {min:2200,  max:3500,  tier:'mid'},
-        'Galaxy A55':          {min:2800,  max:4200,  tier:'mid'},
-        'Galaxy A54':          {min:2200,  max:3500,  tier:'budget'},
-        'Galaxy A53':          {min:1800,  max:2800,  tier:'budget'},
-        'Galaxy A52':          {min:1500,  max:2500,  tier:'budget'},
-        'Galaxy A35':          {min:2200,  max:3200,  tier:'budget'},
-        'Galaxy A34':          {min:1800,  max:2800,  tier:'budget'},
-        'Galaxy A25':          {min:1500,  max:2300,  tier:'budget'},
-        'Galaxy A15':          {min:1200,  max:1800,  tier:'budget'},
-        'Galaxy A05':          {min:800,   max:1300,  tier:'budget'},
-        // Xiaomi
-        'Xiaomi 14 Ultra':     {min:7000,  max:11000, tier:'flagship'},
-        'Xiaomi 14 Pro':       {min:5500,  max:8500,  tier:'high'},
-        'Xiaomi 14':           {min:4500,  max:7000,  tier:'high'},
-        'Xiaomi 13 Ultra':     {min:5500,  max:8500,  tier:'flagship'},
-        'Xiaomi 13 Pro':       {min:4000,  max:6500,  tier:'high'},
-        'Xiaomi 13':           {min:3000,  max:5000,  tier:'mid'},
-        'Redmi Note 13 Pro+':  {min:2500,  max:3800,  tier:'mid'},
-        'Redmi Note 13 Pro':   {min:2000,  max:3200,  tier:'budget'},
-        'Redmi Note 13':       {min:1500,  max:2500,  tier:'budget'},
-        'Redmi Note 12 Pro+':  {min:2200,  max:3200,  tier:'mid'},
-        'Redmi Note 12 Pro':   {min:1800,  max:2800,  tier:'budget'},
-        'Redmi Note 12':       {min:1300,  max:2200,  tier:'budget'},
-        'POCO F6 Pro':         {min:3500,  max:5500,  tier:'mid'},
-        'POCO F6':             {min:2500,  max:4000,  tier:'mid'},
-        'POCO F5':             {min:2000,  max:3200,  tier:'mid'},
-        'POCO X6 Pro':         {min:2200,  max:3500,  tier:'mid'},
-        'POCO X6':             {min:1800,  max:2800,  tier:'budget'},
-    };
+function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); if (cb) cb(); } catch(e) { showToast('⚠️ Sélectionne le texte manuellement'); }
+    document.body.removeChild(ta);
+}
 
-    // Storage price multipliers
-    const storageMult = { '32GB':0.8, '64GB':0.9, '128GB':1.0, '256GB':1.15, '512GB':1.3, '1TB':1.5 };
+function showToast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
 
-    // Condition price multipliers
-    const conditionMult = { 'Neuf':1.25, 'Comme neuf':1.1, 'Excellent':1.0, 'Très bon':0.9, 'Bon':0.8, 'Correct':0.65 };
-
-    // Expected min battery per condition
-    const conditionBattery = { 'Neuf':98, 'Comme neuf':92, 'Excellent':85, 'Très bon':80, 'Bon':75, 'Correct':0 };
-
-    // ===== COHERENCE ENGINE =====
-    function checkCoherence(data) {
-        const alerts = [];
-        let score = 100;
-
-        const { brand, model, storage, color, battery, condition, version, sim, price, oldPrice, hasPromo, hasPhoto, accessories } = data;
-        const p = parseInt(price);
-        const ref = priceRef[model];
-        const batNum = battery === '79-' ? 75 : parseInt(battery);
-
-        // 1. PHOTO CHECK
-        if (!hasPhoto) {
-            score -= 15;
-            alerts.push({ type:'critical', icon:'📷', text:'Pas de photo ! Un post sans photo sera ignoré sur Instagram.' });
-        }
-
-        // 2. MISSING FIELDS
-        if (!battery) {
-            score -= 5;
-            alerts.push({ type:'warning', icon:'🔋', text:'Batterie non renseignée — les acheteurs veulent toujours savoir.' });
-        }
-        if (!condition) {
-            score -= 5;
-            alerts.push({ type:'warning', icon:'📊', text:'État non renseigné — info essentielle pour la vente.' });
-        }
-        if (!version) {
-            score -= 3;
-            alerts.push({ type:'info', icon:'🌍', text:'Version non précisée — les clients demandent toujours Europe ou pas.' });
-        }
-        if (!storage) {
-            score -= 5;
-            alerts.push({ type:'warning', icon:'💾', text:'Stockage non renseigné — c\'est un critère clé du prix.' });
-        }
-        if (!color) {
-            score -= 2;
-            alerts.push({ type:'info', icon:'🎨', text:'Couleur non précisée — ajoute-la pour plus de crédibilité.' });
-        }
-
-        // 3. PRICE vs MODEL CHECK
-        if (ref && p) {
-            let adjMin = ref.min;
-            let adjMax = ref.max;
-
-            // Adjust for storage
-            if (storage && storageMult[storage]) {
-                adjMin = Math.round(adjMin * storageMult[storage]);
-                adjMax = Math.round(adjMax * storageMult[storage]);
-            }
-
-            // Adjust for condition
-            if (condition && conditionMult[condition]) {
-                adjMin = Math.round(adjMin * conditionMult[condition]);
-                adjMax = Math.round(adjMax * conditionMult[condition]);
-            }
-
-            if (p < adjMin * 0.6) {
-                score -= 25;
-                alerts.push({ type:'critical', icon:'🚨', text:`Prix TRÈS bas (${p} DH) pour un ${model}. Fourchette attendue : ${adjMin}-${adjMax} DH. Le client va douter de l'authenticité.` });
-            } else if (p < adjMin * 0.85) {
-                score -= 10;
-                alerts.push({ type:'warning', icon:'💰', text:`Prix bas (${p} DH) pour un ${model}. Fourchette : ${adjMin}-${adjMax} DH. Bon deal ou erreur ?` });
-            } else if (p > adjMax * 1.4) {
-                score -= 20;
-                alerts.push({ type:'critical', icon:'🚨', text:`Prix TRÈS élevé (${p} DH) pour un ${model}. Fourchette attendue : ${adjMin}-${adjMax} DH. Ça ne va pas se vendre.` });
-            } else if (p > adjMax * 1.15) {
-                score -= 8;
-                alerts.push({ type:'warning', icon:'📈', text:`Prix au-dessus du marché (${p} DH). Fourchette : ${adjMin}-${adjMax} DH.` });
-            } else {
-                alerts.push({ type:'ok', icon:'✅', text:`Prix cohérent avec le marché (fourchette : ${adjMin}-${adjMax} DH).` });
-            }
-        } else if (p && !ref) {
-            // No ref data — basic sanity
-            if (p < 500) {
-                score -= 15;
-                alerts.push({ type:'critical', icon:'🚨', text:`Prix ${p} DH semble trop bas pour un smartphone.` });
-            } else if (p > 25000) {
-                score -= 10;
-                alerts.push({ type:'warning', icon:'📈', text:`Prix ${p} DH — vérifie que c'est correct, très peu de téléphones valent autant en occasion.` });
-            }
-        }
-
-        // 4. BATTERY vs CONDITION
-        if (battery && condition) {
-            const expectedMin = conditionBattery[condition];
-            if (batNum < expectedMin) {
-                score -= 12;
-                alerts.push({ type:'critical', icon:'🔋', text:`Batterie ${batNum}% trop basse pour état "${condition}". Minimum attendu : ${expectedMin}%. Change l'état ou vérifie la batterie.` });
-            }
-            if (condition === 'Neuf' && batNum < 100) {
-                score -= 8;
-                alerts.push({ type:'warning', icon:'🆕', text:`Un téléphone "Neuf sous blister" devrait avoir 100% de batterie.` });
-            }
-        }
-
-        // 5. CONDITION "NEUF" CHECKS
-        if (condition === 'Neuf') {
-            if (!accessories.includes('Boîte d\'origine')) {
-                score -= 8;
-                alerts.push({ type:'warning', icon:'📦', text:`Téléphone "Neuf" sans boîte d'origine ? C'est suspect pour le client.` });
-            }
-            if (!accessories.includes('Chargeur')) {
-                score -= 5;
-                alerts.push({ type:'warning', icon:'🔌', text:`Neuf sans chargeur ? Pense à le cocher si c'est inclus.` });
-            }
-        }
-
-        // 6. PROMO CHECKS
-        if (hasPromo && oldPrice) {
-            const op = parseInt(oldPrice);
-            if (op <= p) {
-                score -= 20;
-                alerts.push({ type:'critical', icon:'🏷️', text:`Ancien prix (${op} DH) inférieur ou égal au nouveau prix (${p} DH) !` });
-            } else {
-                const discount = Math.round(((op - p) / op) * 100);
-                if (discount > 40) {
-                    score -= 10;
-                    alerts.push({ type:'warning', icon:'🏷️', text:`Réduction de ${discount}% — ça semble exagéré. Le client va se méfier.` });
-                } else if (discount < 5) {
-                    score -= 5;
-                    alerts.push({ type:'info', icon:'🏷️', text:`Réduction de seulement ${discount}% — autant ne pas afficher de promo.` });
-                } else {
-                    alerts.push({ type:'ok', icon:'🏷️', text:`Réduction de ${discount}% — crédible et attractif.` });
-                }
-            }
-        }
-
-        // 7. SHOP & CONTACT
-        if (!data.shop) {
-            score -= 3;
-            alerts.push({ type:'info', icon:'🏪', text:'Pas de boutique sélectionnée — le client ne saura pas où venir.' });
-        }
-        if (!data.phone) {
-            score -= 5;
-            alerts.push({ type:'warning', icon:'📞', text:'Pas de numéro de contact — le client ne peut pas t\'appeler !' });
-        }
-
-        // 8. BRAND-SPECIFIC CHECKS
-        if (brand === 'Apple' && sim === 'Double SIM' && version === 'US') {
-            score -= 5;
-            alerts.push({ type:'info', icon:'📶', text:'Les iPhones US sont généralement Single SIM physique (eSIM only pour le 2e). Vérifie.' });
-        }
-
-        if (brand === 'Apple' && data.ram) {
-            score -= 3;
-            alerts.push({ type:'info', icon:'⚡', text:'Apple ne communique pas la RAM — inutile de la mentionner pour un iPhone.' });
-        }
-
-        // Clamp score
-        score = Math.max(0, Math.min(100, score));
-
-        return { score, alerts };
-    }
-
-    // ===== FUNCTIONS =====
-    function updateModels() {
-        const brand = document.getElementById('brand').value;
-        const modelSelect = document.getElementById('model');
-        modelSelect.innerHTML = '<option value="">-- Choisir --</option>';
-        if (brand && models[brand]) {
-            models[brand].forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m; opt.textContent = m;
-                modelSelect.appendChild(opt);
-            });
-        }
-        if (brand === 'Autre') {
-            modelSelect.innerHTML = '<option value="">-- Taper le modèle dans le prix --</option>';
-        }
-    }
-
-    function toggleCheck(el) {
-        const input = el.querySelector('input');
-        input.checked = !input.checked;
-        el.classList.toggle('checked', input.checked);
-    }
-
-    function togglePromo() {
-        const toggle = document.getElementById('promoToggle');
-        const field = document.getElementById('promoField');
-        toggle.classList.toggle('active');
-        field.classList.toggle('visible');
-    }
-
-    function selectTemplate(el) {
-        document.querySelectorAll('.template-tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    // Photo handling
-    document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
-
-    function handlePhotoChange(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            const upload = document.getElementById('photoUpload');
-            upload.classList.add('has-photo');
-            upload.innerHTML = `
-                <img src="${ev.target.result}" alt="Photo">
-                <button class="photo-remove" onclick="event.stopPropagation(); removePhoto()">✕</button>
-                <input type="file" id="photoInput" accept="image/*" capture="environment">
-            `;
-            document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function removePhoto() {
-        const upload = document.getElementById('photoUpload');
-        upload.classList.remove('has-photo');
-        upload.innerHTML = `
-            <div class="upload-icon">📷</div>
-            <div class="upload-text">Appuie pour ajouter une photo</div>
-            <input type="file" id="photoInput" accept="image/*" capture="environment">
-            <button class="photo-remove" onclick="event.stopPropagation(); removePhoto()">✕</button>
-        `;
-        document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
-    }
-
-    const versionEmoji = { 'Europe':'🇪🇺','Global':'🌍','US':'🇺🇸','Moyen-Orient':'🌙','Chine':'🇨🇳' };
-    const conditionEmoji = { 'Neuf':'🆕','Comme neuf':'✨','Excellent':'🌟','Très bon':'👌','Bon':'👍','Correct':'✔️' };
-    const shopInfo = {
-        'M1':'📍 Corner Mobile — CC Aït Baha, Rabat',
-        'M2':'📍 Corner Mobile — CC Oued Dahab, Rabat'
-    };
-
-    function formatPhone(num) {
-        if (!num) return '';
-        return num.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-    }
-
-    function formatPrice(price) {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    }
-
-    function getAccessories() {
-        return Array.from(document.querySelectorAll('#accessories input:checked')).map(c => c.value);
-    }
-
-    // ===== RENDER RELIABILITY =====
-    function renderReliability(result) {
-        const section = document.getElementById('reliabilitySection');
-        const card = document.getElementById('reliabilityCard');
-        const gauge = document.getElementById('gaugeFill');
-        const scoreText = document.getElementById('scoreText');
-        const scoreLabel = document.getElementById('scoreLabel');
-        const scoreStatus = document.getElementById('scoreStatus');
-        const alertsList = document.getElementById('alertsList');
-
-        section.classList.add('visible');
-
-        // Score color
-        let colorClass, label, statusText, statusBg, strokeColor;
-        if (result.score >= 80) {
-            colorClass = 'score-green'; label = 'Fiable'; statusText = 'PRÊT À PUBLIER';
-            statusBg = 'rgba(0,200,83,0.15)'; strokeColor = '#00c853';
-        } else if (result.score >= 55) {
-            colorClass = 'score-orange'; label = 'À vérifier'; statusText = 'VÉRIFIER AVANT DE PUBLIER';
-            statusBg = 'rgba(255,152,0,0.15)'; strokeColor = '#ff9800';
-        } else {
-            colorClass = 'score-red'; label = 'Problème'; statusText = 'NE PAS PUBLIER EN L\'ÉTAT';
-            statusBg = 'rgba(244,67,54,0.15)'; strokeColor = '#f44336';
-        }
-
-        // Animate gauge
-        const circumference = 264;
-        const offset = circumference - (result.score / 100) * circumference;
-        gauge.style.stroke = strokeColor;
-        gauge.style.strokeDashoffset = offset;
-
-        scoreText.textContent = result.score;
-        scoreText.className = 'gauge-text ' + colorClass;
-        scoreLabel.textContent = label;
-        scoreLabel.className = 'reliability-label ' + colorClass;
-        scoreStatus.textContent = statusText;
-        scoreStatus.style.background = statusBg;
-        scoreStatus.style.color = strokeColor;
-
-        // Border color
-        card.className = 'reliability-card';
-        if (result.score >= 80) card.classList.add('border-green');
-        else if (result.score >= 55) card.classList.add('border-orange');
-        else card.classList.add('border-red');
-
-        // Alerts
-        alertsList.innerHTML = '';
-        result.alerts.forEach(a => {
-            const div = document.createElement('div');
-            div.className = 'alert-item alert-' + a.type;
-            div.innerHTML = `<span class="alert-icon">${a.icon}</span><span class="alert-text">${a.text}</span>`;
-            alertsList.appendChild(div);
-        });
-    }
-
-    // ===== GENERATE POST =====
-    function generatePost() {
-        const brand = document.getElementById('brand').value;
-        const model = document.getElementById('model').value;
-        const storage = document.getElementById('storage').value;
-        const color = document.getElementById('color').value;
-        const ram = document.getElementById('ram').value;
-        const battery = document.getElementById('battery').value;
-        const condition = document.getElementById('condition').value;
-        const version = document.getElementById('version').value;
-        const sim = document.getElementById('sim').value;
-        const price = document.getElementById('price').value;
-        const oldPrice = document.getElementById('oldPrice').value;
-        const shop = document.getElementById('shop').value;
-        const phone = document.getElementById('phone').value;
-        const accessories = getAccessories();
-        const template = document.querySelector('.template-tab.active').dataset.template;
-        const hasPromo = document.getElementById('promoToggle').classList.contains('active') && oldPrice;
-        const hasPhoto = document.getElementById('photoUpload').classList.contains('has-photo');
-
-        if (!brand || !model || !price) {
-            showToast('⚠️ Remplis au moins : Marque, Modèle et Prix');
-            return;
-        }
-
-        // Run coherence check
-        const coherenceResult = checkCoherence({
-            brand, model, storage, color, battery, condition, version, sim,
-            price, oldPrice, hasPromo, hasPhoto, accessories, shop, phone, ram
-        });
-        renderReliability(coherenceResult);
-
-        const phoneName = `${brand === 'Apple' ? '' : brand + ' '}${model}`;
-        const storageText = storage ? ` ${storage}` : '';
-        const fullName = `${phoneName}${storageText}`;
-
-        let post = '';
-
-        if (template === 'classic') {
-            post += `📱 ${fullName.toUpperCase()} 📱\n`;
-            post += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-            if (condition) post += `${conditionEmoji[condition]||'✅'} État : ${condition}\n`;
-            if (battery) post += `🔋 Batterie : ${battery==='79-'?'Moins de 80':battery}%\n`;
-            if (color) post += `🎨 Couleur : ${color}\n`;
-            if (version) post += `${versionEmoji[version]||'🌍'} Version : ${version}\n`;
-            if (ram && brand !== 'Apple') post += `⚡ RAM : ${ram}\n`;
-            if (sim) post += `📶 ${sim}\n`;
-            if (accessories.length > 0) post += `\n🎁 Accessoires : ${accessories.join(' + ')}\n`;
-            post += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-            if (hasPromo) {
-                post += `💰 ~${formatPrice(oldPrice)} DH~ ➜ ${formatPrice(price)} DH 🔥\n`;
-            } else {
-                post += `💰 Prix : ${formatPrice(price)} DH\n`;
-            }
-            post += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-            if (shop) post += `${shopInfo[shop]}\n`;
-            if (phone) post += `📞 ${formatPhone(phone)}\n`;
-            post += `\n⚡ Dépêchez-vous, stock limité !`;
-
-        } else if (template === 'promo') {
-            post += `🔥🔥🔥 OFFRE DE FOLIE 🔥🔥🔥\n\n`;
-            post += `📱 ${fullName.toUpperCase()}\n\n`;
-            if (hasPromo) {
-                post += `❌ Ancien prix : ${formatPrice(oldPrice)} DH\n`;
-                post += `✅ NOUVEAU PRIX : ${formatPrice(price)} DH 💥\n`;
-                const saving = parseInt(oldPrice) - parseInt(price);
-                if (saving > 0) post += `💸 Tu économises : ${formatPrice(saving)} DH !\n`;
-            } else {
-                post += `💥 PRIX CHOC : ${formatPrice(price)} DH 💥\n`;
-            }
-            post += `\n`;
-            if (condition) post += `✅ ${condition}\n`;
-            if (battery) post += `🔋 Batterie ${battery==='79-'?'< 80':battery}%\n`;
-            if (storage) post += `💾 ${storage}\n`;
-            if (color) post += `🎨 ${color}\n`;
-            if (version) post += `${versionEmoji[version]||'🌍'} ${version}\n`;
-            if (ram && brand !== 'Apple') post += `⚡ ${ram} RAM\n`;
-            if (sim) post += `📶 ${sim}\n`;
-            if (accessories.length > 0) post += `\n🎁 Avec : ${accessories.join(', ')}\n`;
-            post += `\n📍 Viens le récupérer !\n`;
-            if (shop) post += `${shopInfo[shop]}\n`;
-            if (phone) post += `📞 ${formatPhone(phone)}\n`;
-            post += `\n⏰ Quantité TRÈS LIMITÉE — premier arrivé, premier servi ! 🏃‍♂️`;
-
-        } else if (template === 'premium') {
-            post += `👑 ${fullName.toUpperCase()} 👑\n`;
-            post += `═══════════════════\n\n`;
-            post += `Un bijou de technologie disponible chez Corner Mobile.\n\n`;
-            if (condition) post += `▫️ État : ${condition}\n`;
-            if (battery) post += `▫️ Batterie : ${battery==='79-'?'< 80':battery}%\n`;
-            if (storage) post += `▫️ Stockage : ${storage}\n`;
-            if (color) post += `▫️ Couleur : ${color}\n`;
-            if (version) post += `▫️ Version : ${version} ${versionEmoji[version]||''}\n`;
-            if (ram && brand !== 'Apple') post += `▫️ RAM : ${ram}\n`;
-            if (sim) post += `▫️ ${sim}\n`;
-            if (accessories.length > 0) post += `\n🎁 Livré avec : ${accessories.join(' • ')}\n`;
-            post += `\n═══════════════════\n`;
-            if (hasPromo) { post += `💎 ${formatPrice(oldPrice)} DH ➜ ${formatPrice(price)} DH\n`; }
-            else { post += `💎 ${formatPrice(price)} DH\n`; }
-            post += `═══════════════════\n\n`;
-            if (shop) post += `${shopInfo[shop]}\n`;
-            if (phone) post += `📞 ${formatPhone(phone)}\n`;
-            post += `\n✨ La qualité, ça se voit.`;
-
-        } else if (template === 'urgent') {
-            post += `⚡⚡⚡ VENTE FLASH ⚡⚡⚡\n\n`;
-            post += `📱 ${fullName.toUpperCase()}\n\n`;
-            let details = [];
-            if (condition) details.push(condition);
-            if (battery) details.push(`Batterie ${battery==='79-'?'< 80':battery}%`);
-            if (storage) details.push(storage);
-            if (color) details.push(color);
-            if (version) details.push(`${versionEmoji[version]||''} ${version}`);
-            if (ram && brand !== 'Apple') details.push(`${ram} RAM`);
-            if (sim) details.push(sim);
-            post += details.join(' | ') + '\n\n';
-            if (accessories.length > 0) post += `🎁 + ${accessories.join(' + ')}\n\n`;
-            if (hasPromo) { post += `💰 ${formatPrice(oldPrice)} ➜ ${formatPrice(price)} DH\n\n`; }
-            else { post += `💰 ${formatPrice(price)} DH\n\n`; }
-            if (shop) post += `${shopInfo[shop]}\n`;
-            if (phone) post += `📞 ${formatPhone(phone)}\n`;
-            post += `\n🏃 FONCE AVANT QU'IL PARTE ! 🏃`;
-
-        } else if (template === 'simple') {
-            post += `${phoneName}${storageText ? ' — ' + storage : ''}\n\n`;
-            let lines = [];
-            if (condition) lines.push(`• ${condition}`);
-            if (battery) lines.push(`• Batterie ${battery==='79-'?'< 80':battery}%`);
-            if (color) lines.push(`• ${color}`);
-            if (version) lines.push(`• Version ${version}`);
-            if (ram && brand !== 'Apple') lines.push(`• ${ram} RAM`);
-            if (sim) lines.push(`• ${sim}`);
-            post += lines.join('\n') + '\n';
-            if (accessories.length > 0) post += `• Avec ${accessories.join(', ')}\n`;
-            post += `\nPrix : ${formatPrice(price)} DH`;
-            if (hasPromo) post += ` (au lieu de ${formatPrice(oldPrice)} DH)`;
-            post += '\n\n';
-            if (shop) post += `${shopInfo[shop]}\n`;
-            if (phone) post += `${formatPhone(phone)}\n`;
-        }
-
-        // Hashtags
-        const brandTag = brand.toLowerCase().replace(/\s/g, '');
-        const modelTag = model.toLowerCase().replace(/[\s+()]/g, '').replace(/'/g, '');
-        let hashtags = `#${brandTag} #${modelTag} #smartphone #occasion #rabat #maroc #morocco #phoneshop #cornermobile #téléphone`;
-        if (brand === 'Apple') hashtags += ' #iphone #apple #ios #iphoneonly';
-        else if (brand === 'Samsung') hashtags += ' #samsung #galaxy #android';
-        else hashtags += ' #android';
-        hashtags += ' #bonplan #prixchoc #hmizat #promo #deal #smartphone_maroc';
-
-        // Display
-        const outputSection = document.getElementById('outputSection');
-        outputSection.classList.add('visible');
-        document.getElementById('outputText').textContent = post;
-        document.getElementById('hashtagsBox').textContent = hashtags;
-
-        const uploadImg = document.querySelector('#photoUpload img');
-        const outputPhoto = document.getElementById('outputPhoto');
-        if (uploadImg) { outputPhoto.src = uploadImg.src; outputPhoto.style.display = 'block'; }
-        else { outputPhoto.style.display = 'none'; }
-
-        setTimeout(() => {
-            document.getElementById('reliabilitySection').scrollIntoView({ behavior:'smooth', block:'start' });
-        }, 100);
-    }
-
-    function copyText() {
-        const text = document.getElementById('outputText').textContent;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('btnCopy');
-            btn.innerHTML = '✅ COPIÉ !'; btn.classList.add('copied');
-            showToast('✅ Texte copié !');
-            setTimeout(() => { btn.innerHTML = '📋 COPIER LE TEXTE'; btn.classList.remove('copied'); }, 2000);
-        }).catch(() => fallbackCopy(text));
-    }
-
-    function copyHashtags() {
-        const text = document.getElementById('hashtagsBox').textContent;
-        navigator.clipboard.writeText(text).then(() => showToast('✅ Hashtags copiés !')).catch(() => fallbackCopy(text));
-    }
-
-    function fallbackCopy(text) {
-        const ta = document.createElement('textarea');
-        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-        document.body.removeChild(ta); showToast('✅ Copié !');
-    }
-
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message; toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-    </script>
+// PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>

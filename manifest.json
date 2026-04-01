@@ -1,0 +1,13 @@
+{
+  "name": "Générateur de Posts Instagram",
+  "short_name": "PostGen",
+  "description": "Génère des annonces Instagram pour boutique de téléphones",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#E1306C",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
