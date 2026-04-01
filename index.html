@@ -156,12 +156,14 @@
         }
         .toast {
             position: fixed; bottom: calc(30px + var(--safe-bottom)); left: 50%;
-            transform: translateX(-50%) translateY(100px);
+            transform: translateX(-50%) translateY(200px);
             background: var(--success); color: white; padding: 12px 24px;
             border-radius: 30px; font-size: 14px; font-weight: 600;
-            z-index: 1000; transition: transform 0.3s ease; pointer-events: none;
+            z-index: 1000; transition: transform 0.3s ease, opacity 0.3s ease;
+            pointer-events: none; opacity: 0;
+            max-width: calc(100vw - 32px); text-align: center;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         /* Promo toggle */
         .promo-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
         .promo-toggle span { font-size: 14px; }
