@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     <title>📱 Corner Mobile — Générateur de Posts</title>
     <style>
         :root {
@@ -247,7 +250,7 @@
             width: 100%; border-radius: 12px; background: var(--card);
             border: 1px solid var(--card-border); overflow: hidden;
         }
-        .canvas-preview canvas { width: 100%; display: block; }
+        .canvas-preview img { width: 100%; display: block; border-radius: 12px; }
         .btn-download {
             width: 100%; padding: 14px; background: linear-gradient(135deg, var(--blue), var(--green));
             border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 700;
@@ -550,11 +553,12 @@
         </div>
         <!-- CANVAS OUTPUT -->
         <div class="canvas-output" id="canvasOutput">
-            <div class="canvas-preview" id="canvasPreview"><canvas id="imgCanvas"></canvas></div>
+            <div class="canvas-preview" id="canvasPreview"><img id="imgResult" alt="Post généré"></div>
             <button class="btn-download" id="btnDownload">📥 TÉLÉCHARGER L'IMAGE</button>
             <button class="btn-share" id="btnShare">📤 Partager</button>
         </div>
     </div>
+    <div id="imgRender" style="position:fixed;left:-9999px;top:0;z-index:-1;"></div>
     <div class="toast" id="toast" role="status" aria-live="polite">✅ Copié !</div>
 
 <script>
@@ -887,80 +891,24 @@ function generateTextPost(){
 // =====================================================================
 // CANVAS IMAGE GENERATOR (all bugs fixed, Corner Mobile branding)
 // =====================================================================
-const CM_BLUE='#2AA8DC', CM_GREEN='#5BBF3E', CM_DARK='#080c0f';
+// IMAGE GENERATOR — html-to-image + HTML/CSS templates
+// =====================================================================
 
-function loadImage(url){return new Promise((res,rej)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>res(img);img.onerror=rej;img.src=url;});}
-
-function coverDraw(ctx,img,x,y,w,h){
-    const r=Math.max(w/img.width,h/img.height);
-    ctx.drawImage(img,x+(w-img.width*r)/2,y+(h-img.height*r)/2,img.width*r,img.height*r);
+// Photo to dataURL for html-to-image embedding
+function getPhotoDataURL(){
+    return new Promise(resolve=>{
+        if(!currentPhotoFile)return resolve(null);
+        const reader=new FileReader();
+        reader.onload=e=>resolve(e.target.result);
+        reader.readAsDataURL(currentPhotoFile);
+    });
 }
 
-function roundRect(ctx,x,y,w,h,r){
-    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
-    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-}
-
-function wrapText(ctx,text,maxW){
-    const words=text.split(' ');const lines=[];let line='';
-    words.forEach(w=>{const test=line?line+' '+w:w;if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=w;}else line=test;});
-    if(line)lines.push(line);return lines;
-}
-
-function drawWatermark(ctx,w,h,dark){
-    ctx.save();
-    const text='CORNER MOBILE';
-    ctx.font='600 22px -apple-system, sans-serif';
-    ctx.textAlign='right';ctx.textBaseline='bottom';
-    const tm=ctx.measureText(text);
-    const px=w-30,py=h-28,pad=8;
-    // pill bg
-    ctx.globalAlpha=dark?0.1:0.12;
-    ctx.fillStyle='#000';
-    roundRect(ctx,px-tm.width-pad,py-20-pad,tm.width+pad*2,20+pad*2,6);ctx.fill();
-    // text
-    ctx.globalAlpha=dark?0.25:0.3;
-    ctx.fillStyle=dark?'#555':CM_BLUE;
-    ctx.fillText(text,px,py);
-    ctx.restore();
-}
-
-function drawPriceBadge(ctx,price,oldPrice,x,y){
-    ctx.save();
-    const sz=48;
-    ctx.font=`800 ${sz}px -apple-system, sans-serif`;
-    const pt=fmtPrice(price)+' DH';
-    const pm=ctx.measureText(pt);
-    const bw=pm.width+40,bh=sz+(oldPrice?38:20);
-    // gradient badge
-    const grad=ctx.createLinearGradient(x,y,x+bw,y+bh);
-    grad.addColorStop(0,CM_BLUE);grad.addColorStop(1,CM_GREEN);
-    ctx.fillStyle=grad;
-    roundRect(ctx,x,y,bw,bh,14);ctx.fill();
-    // price text
-    ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.fillText(pt,x+20,y+(oldPrice?bh*0.62:bh/2));
-    // strikethrough old price
-    if(oldPrice){
-        ctx.font=`600 ${sz*0.45}px -apple-system, sans-serif`;
-        ctx.globalAlpha=0.75;
-        const opText=fmtPrice(oldPrice)+' DH';
-        const opy=y+bh*0.26;
-        ctx.fillText(opText,x+20,opy);
-        const opm=ctx.measureText(opText);
-        ctx.strokeStyle='#fff';ctx.lineWidth=2;
-        ctx.beginPath();ctx.moveTo(x+18,opy);ctx.lineTo(x+22+opm.width,opy);ctx.stroke();
-    }
-    ctx.restore();
-    return{w:bw,h:bh};
-}
-
+// Specs list builder
 function getSpecsList(d){
     const s=[];
     if(d.condition)s.push(d.condition);
-    if(d.battery)s.push('Bat. '+(d.battery==='79-'?'<80':d.battery)+'%');
-    if(d.storage)s.push(d.storage);
+    if(d.battery)s.push('Batterie '+(d.battery==='79-'?'< 80':d.battery)+'%');
     if(d.color)s.push(d.color);
     if(d.version)s.push(d.version);
     if(d.faceid==='Fonctionne')s.push('Face ID ✅');
@@ -969,202 +917,204 @@ function getSpecsList(d){
     return s;
 }
 
-// FIX: spec pills with max rows to prevent overflow
-function drawSpecPills(ctx,specs,startX,startY,maxW,maxRows){
-    ctx.save();maxRows=maxRows||3;
-    ctx.font='600 24px -apple-system, sans-serif';
-    let x=startX,y=startY,row=0;
-    const gap=8,padX=14,padY=8,h=36;
-    for(let i=0;i<specs.length;i++){
-        const s=specs[i];
-        const tm=ctx.measureText(s);const w=tm.width+padX*2;
-        if(x+w>startX+maxW&&x!==startX){x=startX;y+=h+gap;row++;if(row>=maxRows)break;}
-        ctx.fillStyle='rgba(255,255,255,0.15)';roundRect(ctx,x,y,w,h,18);ctx.fill();
-        ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(s,x+padX,y+h/2);
-        x+=w+gap;
+// Shared HTML fragments
+function pillsHTML(specs){
+    return specs.map(s=>`<span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 18px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:24px;color:#fff;white-space:nowrap;">${s}</span>`).join('');
+}
+
+function priceHTML(price,oldPrice,align){
+    const al=align||'left';
+    let html=`<div style="display:inline-flex;flex-direction:column;align-items:${al==='center'?'center':'flex-start'};">`;
+    if(oldPrice){
+        html+=`<span style="font-family:'Inter',sans-serif;font-weight:500;font-size:22px;color:rgba(255,255,255,0.6);text-decoration:line-through;margin-bottom:2px;">${fmtPrice(oldPrice)} DH</span>`;
     }
-    ctx.restore();return y+h+10;
+    html+=`<div style="background:linear-gradient(135deg,#2AA8DC,#5BBF3E);padding:${oldPrice?'10px 28px':'14px 28px'};border-radius:14px;display:inline-block;">
+        <span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:48px;color:#fff;letter-spacing:-1px;">${fmtPrice(price)} DH</span>
+    </div></div>`;
+    return html;
 }
 
-// ===== POST LAYOUTS (1080x1350) =====
+function watermarkHTML(dark){
+    const c=dark?'rgba(0,0,0,0.15)':'rgba(42,168,220,0.3)';
+    const bg=dark?'rgba(0,0,0,0.06)':'rgba(0,0,0,0.12)';
+    return `<div style="position:absolute;bottom:20px;right:24px;display:flex;align-items:center;gap:6px;">
+        <span style="font-family:'Inter',sans-serif;font-weight:600;font-size:20px;color:${c};letter-spacing:2px;background:${bg};padding:6px 12px;border-radius:6px;">CORNER MOBILE</span>
+    </div>`;
+}
 
-async function renderPostGradient(ctx,img,d){
+function shopLineHTML(d,color){
+    const c=color||'rgba(255,255,255,0.5)';
+    let parts=[];
+    if(d.shop)parts.push('Corner Mobile • '+(SHOP_SHORT[d.shop]||''));
+    if(d.phoneNum)parts.push('📞 '+fmtPhone(d.phoneNum));
+    if(!parts.length)return '';
+    return `<div style="font-family:'Inter',sans-serif;font-weight:500;font-size:24px;color:${c};text-align:center;padding:0 40px;">${parts.join('  •  ')}</div>`;
+}
+
+// ===== 6 HTML TEMPLATES =====
+
+function tplPostGradient(d,photo){
     const W=1080,H=1350;
-    coverDraw(ctx,img,0,0,W,H);
-    // Top gradient
-    let g=ctx.createLinearGradient(0,0,0,300);g.addColorStop(0,'rgba(0,0,0,0.8)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,300);
-    // Bottom gradient
-    g=ctx.createLinearGradient(0,H-480,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.3,'rgba(0,0,0,0.7)');g.addColorStop(1,'rgba(0,0,0,0.95)');ctx.fillStyle=g;ctx.fillRect(0,H-480,W,480);
-    // Model name top
-    ctx.fillStyle='#fff';ctx.font='800 52px -apple-system, sans-serif';ctx.textAlign='left';
-    wrapText(ctx,d.fullName.toUpperCase(),W-80).forEach((l,i)=>ctx.fillText(l,40,65+i*60));
-    // Shop top-right
-    if(d.shop){ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='500 24px -apple-system, sans-serif';ctx.textAlign='right';ctx.fillText('Corner Mobile • '+(SHOP_SHORT[d.shop]||''),W-40,65);}
-    // Specs pills — FIX: limit to 2 rows, start higher
-    const specs=getSpecsList(d);
-    const specsY=drawSpecPills(ctx,specs,40,H-220,W-80,2);
-    // Price badge
-    drawPriceBadge(ctx,d.price,d.hasPromo&&d.oldPrice?d.oldPrice:null,40,H-130);
-    // Phone
-    if(d.phoneNum){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='500 24px -apple-system, sans-serif';ctx.textAlign='right';ctx.fillText('📞 '+fmtPhone(d.phoneNum),W-40,H-40);}
-    drawWatermark(ctx,W,H);
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+        <div style="position:absolute;top:0;left:0;right:0;height:320px;background:linear-gradient(to bottom,rgba(0,0,0,0.85),transparent);padding:40px 44px;">
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:52px;color:#fff;line-height:1.15;text-shadow:0 2px 20px rgba(0,0,0,0.5);">${d.fullName.toUpperCase()}</div>
+            ${d.shop?`<div style="font-family:'Inter',sans-serif;font-weight:500;font-size:22px;color:rgba(255,255,255,0.6);margin-top:10px;">Corner Mobile • ${SHOP_SHORT[d.shop]||''}</div>`:''}
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:420px;background:linear-gradient(to top,rgba(0,0,0,0.97) 30%,rgba(0,0,0,0.7) 60%,transparent);display:flex;flex-direction:column;justify-content:flex-end;padding:0 44px 80px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">${pillsHTML(getSpecsList(d))}</div>
+            ${priceHTML(d.price,d.hasPromo?d.oldPrice:null)}
+            ${d.phoneNum?`<div style="font-family:'Inter',sans-serif;font-weight:500;font-size:22px;color:rgba(255,255,255,0.45);margin-top:14px;">📞 ${fmtPhone(d.phoneNum)}</div>`:''}
+        </div>
+        ${watermarkHTML()}
+    </div>`;
 }
 
-async function renderPostCard(ctx,img,d){
+function tplPostCard(d,photo){
     const W=1080,H=1350;
-    ctx.fillStyle=CM_DARK;ctx.fillRect(0,0,W,H);
-    // Accent line
-    const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,CM_BLUE);grad.addColorStop(1,CM_GREEN);
-    ctx.fillStyle=grad;ctx.fillRect(0,0,W,5);
-    // FIX: Model name with wrapping
-    ctx.fillStyle='#fff';ctx.font='800 48px -apple-system, sans-serif';ctx.textAlign='center';
-    const nameLines=wrapText(ctx,d.fullName.toUpperCase(),W-100);
-    nameLines.forEach((l,i)=>ctx.fillText(l,W/2,75+i*56));
-    const photoTop=60+nameLines.length*56+10;
-    // Photo with rounded corners
-    const pm=50,photoH=Math.min(700,H-photoTop-300);const pw=W-pm*2;
-    ctx.save();roundRect(ctx,pm,photoTop,pw,photoH,20);ctx.clip();
-    coverDraw(ctx,img,pm,photoTop,pw,photoH);ctx.restore();
-    // Specs
-    const specs=getSpecsList(d);
-    const nextY=drawSpecPills(ctx,specs,pm,photoTop+photoH+25,pw,2);
-    // Price
-    drawPriceBadge(ctx,d.price,d.hasPromo&&d.oldPrice?d.oldPrice:null,pm,Math.min(nextY+5,H-170));
-    // Shop
-    if(d.shop||d.phoneNum){ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='500 24px -apple-system, sans-serif';ctx.textAlign='center';
-    ctx.fillText(['Corner Mobile'+(d.shop?' • '+(SHOP_SHORT[d.shop]||''):''),d.phoneNum?fmtPhone(d.phoneNum):''].filter(Boolean).join('  •  '),W/2,H-35);}
-    drawWatermark(ctx,W,H);
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#080c0f;font-family:'Inter',sans-serif;">
+        <div style="height:5px;background:linear-gradient(90deg,#2AA8DC,#5BBF3E);"></div>
+        <div style="text-align:center;padding:30px 50px 20px;">
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:46px;color:#fff;line-height:1.15;">${d.fullName.toUpperCase()}</div>
+        </div>
+        <div style="margin:0 44px;border-radius:20px;overflow:hidden;height:680px;border:2px solid rgba(42,168,220,0.15);">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="padding:22px 44px 0;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">${pillsHTML(getSpecsList(d))}</div>
+            ${priceHTML(d.price,d.hasPromo?d.oldPrice:null)}
+        </div>
+        <div style="position:absolute;bottom:28px;left:0;right:0;">
+            ${shopLineHTML(d,'rgba(255,255,255,0.35)')}
+        </div>
+        ${watermarkHTML()}
+    </div>`;
 }
 
-// FIX: Minimal layout with promo support
-async function renderPostMinimal(ctx,img,d){
-    const W=1080,H=1350,border=60;
-    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-    const pw=W-border*2,ph=H-280;
-    ctx.save();roundRect(ctx,border,border,pw,ph,4);ctx.clip();
-    coverDraw(ctx,img,border,border,pw,ph);ctx.restore();
-    const barY=border+ph+20;
-    ctx.fillStyle='#111';ctx.font='700 42px -apple-system, sans-serif';ctx.textAlign='left';
-    const nameLines=wrapText(ctx,d.fullName,pw);
-    nameLines.slice(0,2).forEach((l,i)=>ctx.fillText(l,border,barY+42+i*48));
-    const afterName=barY+42+Math.min(nameLines.length,2)*48+6;
-    ctx.font='500 26px -apple-system, sans-serif';ctx.fillStyle='#666';
-    ctx.fillText(getSpecsList(d).slice(0,4).join('  •  '),border,afterName);
-    // Price with promo support
-    ctx.textAlign='right';
-    if(d.hasPromo&&d.oldPrice){
-        ctx.font='500 28px -apple-system, sans-serif';ctx.fillStyle='#999';
-        const opText=fmtPrice(d.oldPrice)+' DH';ctx.fillText(opText,W-border,barY+30);
-        const opm=ctx.measureText(opText);
-        ctx.strokeStyle='#999';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W-border-opm.width-2,barY+30);ctx.lineTo(W-border+2,barY+30);ctx.stroke();
-        ctx.font='800 48px -apple-system, sans-serif';ctx.fillStyle=CM_BLUE;
-        ctx.fillText(fmtPrice(d.price)+' DH',W-border,barY+78);
-    }else{
-        ctx.font='800 48px -apple-system, sans-serif';ctx.fillStyle=CM_BLUE;
-        ctx.fillText(fmtPrice(d.price)+' DH',W-border,barY+55);
-    }
-    drawWatermark(ctx,W,H,true);
+function tplPostMinimal(d,photo){
+    const W=1080,H=1350,b=56;
+    const specs=getSpecsList(d).slice(0,4).join('  •  ');
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#fff;font-family:'Inter',sans-serif;">
+        <div style="margin:${b}px;height:${H-260}px;border-radius:6px;overflow:hidden;">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="padding:12px ${b}px 0;display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;min-width:0;padding-right:20px;">
+                <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:40px;color:#111;line-height:1.15;">${d.fullName}</div>
+                <div style="font-size:24px;color:#888;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${specs}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                ${d.hasPromo&&d.oldPrice?`<div style="font-size:26px;color:#aaa;text-decoration:line-through;">${fmtPrice(d.oldPrice)} DH</div>`:''}
+                <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:46px;color:#2AA8DC;white-space:nowrap;">${fmtPrice(d.price)} DH</div>
+            </div>
+        </div>
+        ${watermarkHTML(true)}
+    </div>`;
 }
 
-// ===== STORY LAYOUTS (1080x1920) =====
-
-async function renderStoryFull(ctx,img,d){
+function tplStoryFull(d,photo){
     const W=1080,H=1920;
-    coverDraw(ctx,img,0,0,W,H);
-    // Bottom gradient
-    let g=ctx.createLinearGradient(0,H*0.35,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.35,'rgba(0,0,0,0.6)');g.addColorStop(0.7,'rgba(0,0,0,0.92)');g.addColorStop(1,'rgba(0,0,0,0.98)');
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    // Top gradient
-    g=ctx.createLinearGradient(0,0,0,180);g.addColorStop(0,'rgba(0,0,0,0.5)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,180);
-    // Shop name top
-    if(d.shop){ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='600 28px -apple-system, sans-serif';ctx.textAlign='center';ctx.fillText('Corner Mobile • '+(SHOP_SHORT[d.shop]||''),W/2,55);}
-    // Model name large
-    ctx.fillStyle='#fff';ctx.font='900 68px -apple-system, sans-serif';ctx.textAlign='left';
-    const lines=wrapText(ctx,d.fullName.toUpperCase(),W-100);
-    let nameY=H-620;lines.forEach((l,i)=>ctx.fillText(l,50,nameY+i*78));
-    // Specs
-    const specsY=nameY+lines.length*78+15;
-    const specs=getSpecsList(d);
-    const nextY=drawSpecPills(ctx,specs,50,specsY,W-100,2);
-    // Price
-    drawPriceBadge(ctx,d.price,d.hasPromo&&d.oldPrice?d.oldPrice:null,50,nextY+5);
-    // Phone
-    if(d.phoneNum){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='500 28px -apple-system, sans-serif';ctx.textAlign='center';ctx.fillText('📞 '+fmtPhone(d.phoneNum),W/2,H-50);}
-    drawWatermark(ctx,W,H);
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+        <div style="position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);display:flex;align-items:center;justify-content:center;padding-top:20px;">
+            ${d.shop?`<span style="font-family:'Inter',sans-serif;font-weight:600;font-size:26px;color:rgba(255,255,255,0.7);">Corner Mobile • ${SHOP_SHORT[d.shop]||''}</span>`:''}
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:680px;background:linear-gradient(to top,rgba(0,0,0,0.98) 35%,rgba(0,0,0,0.8) 60%,transparent);display:flex;flex-direction:column;justify-content:flex-end;padding:0 50px 90px;">
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:66px;color:#fff;line-height:1.12;margin-bottom:20px;text-shadow:0 4px 30px rgba(0,0,0,0.5);">${d.fullName.toUpperCase()}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;">${pillsHTML(getSpecsList(d))}</div>
+            ${priceHTML(d.price,d.hasPromo?d.oldPrice:null)}
+            ${d.phoneNum?`<div style="font-family:'Inter',sans-serif;font-weight:500;font-size:26px;color:rgba(255,255,255,0.45);margin-top:16px;">📞 ${fmtPhone(d.phoneNum)}</div>`:''}
+        </div>
+        ${watermarkHTML()}
+    </div>`;
 }
 
-async function renderStorySplit(ctx,img,d){
-    const W=1080,H=1920,splitAt=Math.round(H*0.5);
-    ctx.save();ctx.rect(0,0,W,splitAt);ctx.clip();coverDraw(ctx,img,0,0,W,splitAt);ctx.restore();
-    ctx.fillStyle=CM_DARK;ctx.fillRect(0,splitAt,W,H-splitAt);
-    // Accent line
-    const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,CM_BLUE);grad.addColorStop(1,CM_GREEN);
-    ctx.fillStyle=grad;ctx.fillRect(0,splitAt,W,5);
-    // Content
-    let y=splitAt+45;
-    ctx.fillStyle='#fff';ctx.font='800 54px -apple-system, sans-serif';ctx.textAlign='left';
-    wrapText(ctx,d.fullName.toUpperCase(),W-100).forEach(l=>{ctx.fillText(l,50,y+50);y+=62;});
-    y+=15;
-    // Specs list
+function tplStorySplit(d,photo){
+    const W=1080,H=1920,split=Math.round(H*0.48);
     const specs=getSpecsList(d);
-    ctx.font='500 30px -apple-system, sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';
-    specs.slice(0,6).forEach(s=>{ctx.fillText('• '+s,50,y+34);y+=42;});
-    y+=15;
-    // Price
-    drawPriceBadge(ctx,d.price,d.hasPromo&&d.oldPrice?d.oldPrice:null,50,y);
-    // FIX: shop+phone with proper spacing above watermark
-    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='500 24px -apple-system, sans-serif';ctx.textAlign='center';
-    if(d.shop)ctx.fillText('Corner Mobile • '+(SHOP_SHORT[d.shop]||''),W/2,H-90);
-    if(d.phoneNum)ctx.fillText('📞 '+fmtPhone(d.phoneNum),W/2,H-58);
-    drawWatermark(ctx,W,H);
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#080c0f;font-family:'Inter',sans-serif;">
+        <div style="height:${split}px;overflow:hidden;">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div style="height:5px;background:linear-gradient(90deg,#2AA8DC,#5BBF3E);"></div>
+        <div style="padding:40px 50px;">
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:52px;color:#fff;line-height:1.15;margin-bottom:28px;">${d.fullName.toUpperCase()}</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+                ${specs.slice(0,6).map(s=>`<div style="font-weight:500;font-size:28px;color:rgba(255,255,255,0.65);">• ${s}</div>`).join('')}
+            </div>
+            ${priceHTML(d.price,d.hasPromo?d.oldPrice:null)}
+        </div>
+        <div style="position:absolute;bottom:50px;left:0;right:0;">
+            ${shopLineHTML(d,'rgba(255,255,255,0.35)')}
+        </div>
+        ${watermarkHTML()}
+    </div>`;
 }
 
-async function renderStoryBold(ctx,img,d){
+function tplStoryBold(d,photo){
     const W=1080,H=1920;
-    coverDraw(ctx,img,0,0,W,H);
-    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fff';ctx.textAlign='center';
-    // Brand
-    ctx.save();ctx.globalAlpha=0.7;ctx.font='600 32px -apple-system, sans-serif';
-    ctx.fillText((d.brand==='Apple'?'iPhone':d.brand).toUpperCase(),W/2,H*0.3);ctx.restore();
-    // Model huge
-    ctx.font='900 76px -apple-system, sans-serif';
-    const lines=wrapText(ctx,d.model.toUpperCase(),W-120);
-    lines.forEach((l,i)=>ctx.fillText(l,W/2,H*0.3+65+i*86));
-    // Storage
-    if(d.storage){ctx.font='700 38px -apple-system, sans-serif';ctx.fillStyle='rgba(255,255,255,0.8)';
-    ctx.fillText(d.storage,W/2,H*0.3+65+lines.length*86+15);}
-    // Price centered
-    ctx.font='800 48px -apple-system, sans-serif';
-    const pt=fmtPrice(d.price)+' DH';const pm=ctx.measureText(pt);
-    drawPriceBadge(ctx,d.price,d.hasPromo&&d.oldPrice?d.oldPrice:null,(W-pm.width-40)/2,H*0.6);
-    // Specs
-    ctx.fillStyle='#fff';
-    drawSpecPills(ctx,getSpecsList(d),50,H*0.74,W-100,2);
-    // Shop
-    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='500 26px -apple-system, sans-serif';ctx.textAlign='center';
-    if(d.shop)ctx.fillText('Corner Mobile • '+(SHOP_SHORT[d.shop]||''),W/2,H-90);
-    if(d.phoneNum)ctx.fillText('📞 '+fmtPhone(d.phoneNum),W/2,H-55);
-    drawWatermark(ctx,W,H);
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.4;">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;">
+            <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:30px;color:rgba(255,255,255,0.6);letter-spacing:4px;margin-bottom:12px;">${(d.brand==='Apple'?'IPHONE':d.brand.toUpperCase())}</div>
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:74px;color:#fff;text-align:center;line-height:1.1;margin-bottom:12px;text-shadow:0 4px 40px rgba(0,0,0,0.5);">${d.model.toUpperCase()}</div>
+            ${d.storage?`<div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:36px;color:rgba(255,255,255,0.75);margin-bottom:40px;">${d.storage}</div>`:'<div style="margin-bottom:40px;"></div>'}
+            ${priceHTML(d.price,d.hasPromo?d.oldPrice:null,'center')}
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:40px;">${pillsHTML(getSpecsList(d))}</div>
+        </div>
+        <div style="position:absolute;bottom:50px;left:0;right:0;">
+            ${shopLineHTML(d,'rgba(255,255,255,0.4)')}
+        </div>
+        ${watermarkHTML()}
+    </div>`;
 }
 
-// ===== GENERATE IMAGE =====
+// ===== CAPTURE ENGINE =====
+let _htmlToImage=null;
+async function getLib(){
+    if(!_htmlToImage)_htmlToImage=await import('https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/+esm');
+    return _htmlToImage;
+}
+
 async function generateImage(d){
-    if(!currentPhotoURL){showToast('⚠️ Ajoute une photo');return;}
-    const canvas=$('imgCanvas'),ctx=canvas.getContext('2d');
+    if(!currentPhotoFile){showToast('⚠️ Ajoute une photo');return;}
+    showToast('⏳ Génération en cours...');
+    const photo=await getPhotoDataURL();
     const isStory=currentFormat==='story';
-    canvas.width=1080;canvas.height=isStory?1920:1350;
-    const img=await loadImage(currentPhotoURL);
+    const W=1080,H=isStory?1920:1350;
+
+    // Build template
+    let html='';
     if(currentFormat==='post'){
-        if(currentLayout==='gradient')await renderPostGradient(ctx,img,d);
-        else if(currentLayout==='card')await renderPostCard(ctx,img,d);
-        else await renderPostMinimal(ctx,img,d);
+        if(currentLayout==='gradient')html=tplPostGradient(d,photo);
+        else if(currentLayout==='card')html=tplPostCard(d,photo);
+        else html=tplPostMinimal(d,photo);
     }else{
-        if(currentLayout==='full')await renderStoryFull(ctx,img,d);
-        else if(currentLayout==='split')await renderStorySplit(ctx,img,d);
-        else await renderStoryBold(ctx,img,d);
+        if(currentLayout==='full')html=tplStoryFull(d,photo);
+        else if(currentLayout==='split')html=tplStorySplit(d,photo);
+        else html=tplStoryBold(d,photo);
     }
-    $('canvasOutput').classList.add('visible');
+
+    // Render offscreen
+    const container=$('imgRender');
+    container.innerHTML=html;
+    const el=container.firstElementChild;
+
+    // Wait for image to load inside the template
+    const imgs=el.querySelectorAll('img');
+    await Promise.all([...imgs].map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r;})));
+
+    try{
+        const lib=await getLib();
+        const dataUrl=await lib.toJpeg(el,{quality:0.92,width:W,height:H,pixelRatio:1,cacheBust:true});
+        $('imgResult').src=dataUrl;
+        $('canvasOutput').classList.add('visible');
+        showToast('✅ Image générée !');
+    }catch(e){
+        console.error('html-to-image error:',e);
+        showToast('⚠️ Erreur — réessaye');
+    }
+    container.innerHTML='';
 }
 
 // =====================================================================
@@ -1234,9 +1184,30 @@ $('btnGenerate').addEventListener('click',function(){
     });
 });
 
-// Download & Share
-$('btnDownload').addEventListener('click',()=>{const c=$('imgCanvas');c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`corner-mobile-${currentFormat}-${Date.now()}.jpg`;a.click();URL.revokeObjectURL(u);showToast('✅ Image téléchargée !');},'image/jpeg',0.92);});
-$('btnShare').addEventListener('click',async()=>{const c=$('imgCanvas');c.toBlob(async b=>{const f=new File([b],'corner-mobile.jpg',{type:'image/jpeg'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Corner Mobile'});}catch(e){}}else{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='corner-mobile.jpg';a.click();URL.revokeObjectURL(u);showToast('📥 Téléchargée');}},'image/jpeg',0.92);});
+// Download & Share — from dataURL img
+function dataURLtoBlob(dataURL){
+    const parts=dataURL.split(',');const mime=parts[0].match(/:(.*?);/)[1];
+    const bin=atob(parts[1]);const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    return new Blob([arr],{type:mime});
+}
+$('btnDownload').addEventListener('click',()=>{
+    const src=$('imgResult').src;if(!src)return;
+    const a=document.createElement('a');a.href=src;
+    a.download=`corner-mobile-${currentFormat}-${Date.now()}.jpg`;a.click();
+    showToast('✅ Image téléchargée !');
+});
+$('btnShare').addEventListener('click',async()=>{
+    const src=$('imgResult').src;if(!src)return;
+    const blob=dataURLtoBlob(src);
+    const file=new File([blob],'corner-mobile.jpg',{type:'image/jpeg'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:'Corner Mobile'});}catch(e){}
+    }else{
+        const a=document.createElement('a');a.href=src;a.download='corner-mobile.jpg';a.click();
+        showToast('📥 Téléchargée');
+    }
+});
 
 // =====================================================================
 // RELIABILITY DISPLAY
