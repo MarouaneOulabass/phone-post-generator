@@ -641,7 +641,80 @@ function getColorOptions(brand,model){
 // =====================================================================
 // COHERENCE ENGINE (unchanged logic, fixes applied)
 // =====================================================================
-function checkCoherence(d){const alerts=[];let score=100;const p=parseInt(d.price);const ref=PRICE_REF[d.model];const bat=d.battery==='79-'?75:parseInt(d.battery);if(!d.hasPhoto){score-=15;alerts.push({type:'critical',icon:'📷',text:'Pas de photo ! Un post sans photo sera ignoré sur Instagram.'});}if(!d.battery){score-=5;alerts.push({type:'warning',icon:'🔋',text:'Batterie non renseignée.'});}if(!d.condition){score-=5;alerts.push({type:'warning',icon:'📊',text:'État non renseigné.'});}if(!d.version){score-=3;alerts.push({type:'info',icon:'🌍',text:'Version non précisée.'});}if(!d.storage){score-=5;alerts.push({type:'warning',icon:'💾',text:'Stockage non renseigné.'});}if(!d.color){score-=2;alerts.push({type:'info',icon:'🎨',text:'Couleur non précisée.'});}if(!d.shop){score-=3;alerts.push({type:'info',icon:'🏪',text:'Pas de boutique sélectionnée.'});}if(!d.phone){score-=5;alerts.push({type:'warning',icon:'📞',text:'Pas de numéro de contact !'});}if(d.brand==='Apple'&&!d.faceid&&d.condition&&d.condition!=='Neuf'){score-=3;alerts.push({type:'info',icon:'🔐',text:'Précise si Face ID fonctionne.'});}if(!d.screen&&d.condition&&d.condition!=='Neuf'){score-=3;alerts.push({type:'info',icon:'📱',text:'Précise si l\'écran est original.'});}if(d.icloud==='Connecté'){score-=15;alerts.push({type:'critical',icon:'☁️',text:'iCloud/FRP encore connecté ! Ne publie PAS avant de déconnecter.'});}if(ref&&p){let mn=ref.min,mx=ref.max;if(d.storage&&STORAGE_MULT[d.storage]){mn=Math.round(mn*STORAGE_MULT[d.storage]);mx=Math.round(mx*STORAGE_MULT[d.storage]);}if(d.condition&&COND_MULT[d.condition]){mn=Math.round(mn*COND_MULT[d.condition]);mx=Math.round(mx*COND_MULT[d.condition]);}if(d.faceid==='Ne fonctionne pas')mx=Math.round(mx*0.85);if(d.screen==='Changé (copie)')mx=Math.round(mx*0.9);if(p<mn*0.6){score-=25;alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS bas (${p} DH). Fourchette : ${mn}-${mx} DH.`});}else if(p<mn*0.85){score-=10;alerts.push({type:'warning',icon:'💰',text:`Prix bas (${p} DH). Fourchette : ${mn}-${mx} DH.`});}else if(p>mx*1.4){score-=20;alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS élevé (${p} DH). Fourchette : ${mn}-${mx} DH.`});}else if(p>mx*1.15){score-=8;alerts.push({type:'warning',icon:'📈',text:`Prix au-dessus du marché. Fourchette : ${mn}-${mx} DH.`});}else{alerts.push({type:'ok',icon:'✅',text:`Prix cohérent (${mn}-${mx} DH).`});}}else if(p&&!ref){if(p<500){score-=15;alerts.push({type:'critical',icon:'🚨',text:`Prix ${p} DH trop bas.`});}else if(p>25000){score-=10;alerts.push({type:'warning',icon:'📈',text:`Prix ${p} DH — vérifie.`});}}if(d.battery&&d.condition){const expMin=COND_BAT[d.condition];if(bat<expMin){score-=12;alerts.push({type:'critical',icon:'🔋',text:`Batterie ${bat}% trop basse pour "${d.condition}". Min : ${expMin}%.`});}if(d.condition==='Neuf'&&bat<100){score-=8;alerts.push({type:'warning',icon:'🆕',text:'"Neuf" devrait avoir 100% batterie.'});}}if(d.condition==='Neuf'){if(!d.accessories.includes("Boîte d'origine")){score-=8;alerts.push({type:'warning',icon:'📦',text:'"Neuf" sans boîte ?'});}if(!d.accessories.includes('Chargeur')){score-=5;alerts.push({type:'warning',icon:'🔌',text:'"Neuf" sans chargeur ?'});}const yr=getModelYear(d.brand,d.model);if(2026-yr>=3){score-=10;alerts.push({type:'warning',icon:'📅',text:`"Neuf" pour un modèle de ${yr} ? Suspect en 2026.`});}if(d.screen&&d.screen!=='Original'){score-=15;alerts.push({type:'critical',icon:'📱',text:'"Neuf" mais écran changé !?'});}}if(d.screen==='Changé (copie)'&&(d.condition==='Comme neuf'||d.condition==='Excellent')){score-=8;alerts.push({type:'warning',icon:'📱',text:`Écran copie + "${d.condition}" — change l'état.`});}if(d.faceid==='Ne fonctionne pas'&&ref&&p>ref.max){score-=10;alerts.push({type:'warning',icon:'🔐',text:'Face ID cassé + prix élevé.'});}if(d.hasPromo&&d.oldPrice){const op=parseInt(d.oldPrice);if(isNaN(op)||op<=0){score-=10;alerts.push({type:'critical',icon:'🏷️',text:'Ancien prix invalide.'});}else if(op<=p){score-=20;alerts.push({type:'critical',icon:'🏷️',text:`Ancien prix (${op}) ≤ nouveau (${p}) !`});}else{const disc=Math.round(((op-p)/op)*100);if(disc>40){score-=10;alerts.push({type:'warning',icon:'🏷️',text:`Réduction ${disc}% — exagéré.`});}else if(disc<5){score-=5;alerts.push({type:'info',icon:'🏷️',text:`Réduction ${disc}% — trop faible.`});}else{alerts.push({type:'ok',icon:'🏷️',text:`Réduction ${disc}% — OK.`});}if(ref){let mMax=ref.max;if(d.storage&&STORAGE_MULT[d.storage])mMax=Math.round(mMax*STORAGE_MULT[d.storage]);if(d.condition&&COND_MULT[d.condition])mMax=Math.round(mMax*COND_MULT[d.condition]);if(op>mMax*1.5){score-=8;alerts.push({type:'warning',icon:'🏷️',text:`Ancien prix (${op}) au-dessus du marché (~${mMax}). Fausse promo ?`});}}}}if(d.brand==='Apple'&&d.ram){score-=3;alerts.push({type:'info',icon:'⚡',text:'RAM inutile pour iPhone.'});}if(d.brand==='Apple'&&d.sim==='Double SIM'&&d.version==='US'){score-=5;alerts.push({type:'info',icon:'📶',text:'iPhones US = eSIM only.'});}if(d.unlock==='Bloqué opérateur'){score-=3;alerts.push({type:'warning',icon:'🔓',text:'Bloqué opérateur — mentionne-le.'});}return{score:Math.max(0,Math.min(100,score)),alerts};}
+function checkCoherence(d){
+    const alerts=[];let score=100;const p=parseInt(d.price);const ref=PRICE_REF[d.model];const bat=d.battery==='79-'?75:parseInt(d.battery);
+    let icloudBlock=false;
+    // Photo
+    if(!d.hasPhoto){score-=15;alerts.push({type:'critical',icon:'📷',text:'Pas de photo ! Un post sans photo sera ignoré sur Instagram.'});}
+    // Missing fields
+    if(!d.battery){score-=5;alerts.push({type:'warning',icon:'🔋',text:'Batterie non renseignée.'});}
+    if(!d.condition){score-=5;alerts.push({type:'warning',icon:'📊',text:'État non renseigné.'});}
+    if(!d.version){score-=3;alerts.push({type:'info',icon:'🌍',text:'Version non précisée.'});}
+    if(!d.storage){score-=5;alerts.push({type:'warning',icon:'💾',text:'Stockage non renseigné.'});}
+    if(!d.color){score-=2;alerts.push({type:'info',icon:'🎨',text:'Couleur non précisée.'});}
+    if(!d.shop){score-=3;alerts.push({type:'info',icon:'🏪',text:'Pas de boutique sélectionnée.'});}
+    if(!d.phone){score-=5;alerts.push({type:'warning',icon:'📞',text:'Pas de numéro de contact !'});}
+    if(d.brand==='Apple'&&!d.faceid&&d.condition&&d.condition!=='Neuf'){score-=3;alerts.push({type:'info',icon:'🔐',text:'Précise si Face ID fonctionne.'});}
+    if(!d.screen&&d.condition&&d.condition!=='Neuf'){score-=3;alerts.push({type:'info',icon:'🖥️',text:'Précise si l\'écran est original.'});}
+    // FIX #3: iCloud — hard cap at 50 max (never green)
+    if(d.icloud==='Connecté'){score-=25;icloudBlock=true;alerts.push({type:'critical',icon:'☁️',text:'iCloud/FRP encore connecté ! NE PUBLIE PAS avant de déconnecter le compte.'});}
+    // Price vs model — FIX #2: stronger scam penalty
+    if(ref&&p){
+        let mn=ref.min,mx=ref.max;
+        if(d.storage&&STORAGE_MULT[d.storage]){mn=Math.round(mn*STORAGE_MULT[d.storage]);mx=Math.round(mx*STORAGE_MULT[d.storage]);}
+        if(d.condition&&COND_MULT[d.condition]){mn=Math.round(mn*COND_MULT[d.condition]);mx=Math.round(mx*COND_MULT[d.condition]);}
+        if(d.faceid==='Ne fonctionne pas')mx=Math.round(mx*0.85);
+        if(d.screen==='Changé (copie)')mx=Math.round(mx*0.9);
+        if(d.unlock==='Bloqué opérateur'){mn=Math.round(mn*0.85);mx=Math.round(mx*0.85);}
+        if(p<mn*0.6){score-=40;alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS bas (${p} DH) pour un ${d.model}. Fourchette : ${mn}-${mx} DH. Arnaque ou erreur ?`});}
+        else if(p<mn*0.85){score-=12;alerts.push({type:'warning',icon:'💰',text:`Prix bas (${p} DH). Fourchette : ${mn}-${mx} DH.`});}
+        else if(p>mx*1.4){score-=20;alerts.push({type:'critical',icon:'🚨',text:`Prix TRÈS élevé (${p} DH). Fourchette : ${mn}-${mx} DH.`});}
+        else if(p>mx*1.15){score-=8;alerts.push({type:'warning',icon:'📈',text:`Prix au-dessus du marché. Fourchette : ${mn}-${mx} DH.`});}
+        // FIX #10: prix entre mx et mx*1.15
+        else if(p>mx){score-=3;alerts.push({type:'info',icon:'💰',text:`Prix en limite haute (${p} DH). Fourchette : ${mn}-${mx} DH.`});}
+        else{alerts.push({type:'ok',icon:'✅',text:`Prix cohérent (${mn}-${mx} DH).`});}
+    }else if(p&&!ref){
+        if(p<500){score-=15;alerts.push({type:'critical',icon:'🚨',text:`Prix ${p} DH trop bas.`});}
+        else if(p>25000){score-=10;alerts.push({type:'warning',icon:'📈',text:`Prix ${p} DH — vérifie.`});}
+    }
+    // Battery vs condition — FIX #11: no double penalty
+    if(d.battery&&d.condition){
+        const expMin=COND_BAT[d.condition];
+        if(d.condition==='Neuf'&&bat<100){score-=12;alerts.push({type:'critical',icon:'🔋',text:`Batterie ${bat}% — "Neuf" devrait être à 100%.`});}
+        else if(bat<expMin){score-=12;alerts.push({type:'critical',icon:'🔋',text:`Batterie ${bat}% trop basse pour "${d.condition}". Min : ${expMin}%.`});}
+    }
+    // "Neuf" checks
+    if(d.condition==='Neuf'){
+        if(!d.accessories.includes("Boîte d'origine")){score-=8;alerts.push({type:'warning',icon:'📦',text:'"Neuf" sans boîte ?'});}
+        if(!d.accessories.includes('Chargeur')){score-=5;alerts.push({type:'warning',icon:'🔌',text:'"Neuf" sans chargeur ?'});}
+        const yr=getModelYear(d.brand,d.model);
+        if(2026-yr>=3){score-=10;alerts.push({type:'warning',icon:'📅',text:`"Neuf" pour un modèle de ${yr} ? Suspect en 2026.`});}
+        if(d.screen&&d.screen!=='Original'){score-=15;alerts.push({type:'critical',icon:'🖥️',text:'"Neuf" mais écran changé !?'});}
+    }
+    if(d.screen==='Changé (copie)'&&(d.condition==='Comme neuf'||d.condition==='Excellent')){score-=8;alerts.push({type:'warning',icon:'🖥️',text:`Écran copie + "${d.condition}" — change l'état.`});}
+    if(d.faceid==='Ne fonctionne pas'&&ref&&p>ref.max){score-=10;alerts.push({type:'warning',icon:'🔐',text:'Face ID cassé + prix élevé.'});}
+    // Promo
+    if(d.hasPromo&&d.oldPrice){
+        const op=parseInt(d.oldPrice);
+        if(isNaN(op)||op<=0){score-=10;alerts.push({type:'critical',icon:'🏷️',text:'Ancien prix invalide.'});}
+        else if(op<=p){score-=20;alerts.push({type:'critical',icon:'🏷️',text:`Ancien prix (${op}) ≤ nouveau (${p}) !`});}
+        else{
+            const disc=Math.round(((op-p)/op)*100);
+            if(disc>40){score-=10;alerts.push({type:'warning',icon:'🏷️',text:`Réduction ${disc}% — exagéré.`});}
+            else if(disc<5){score-=5;alerts.push({type:'info',icon:'🏷️',text:`Réduction ${disc}% — trop faible.`});}
+            else{alerts.push({type:'ok',icon:'🏷️',text:`Réduction ${disc}% — OK.`});}
+            if(ref){let mMax=ref.max;if(d.storage&&STORAGE_MULT[d.storage])mMax=Math.round(mMax*STORAGE_MULT[d.storage]);if(d.condition&&COND_MULT[d.condition])mMax=Math.round(mMax*COND_MULT[d.condition]);
+            if(op>mMax*1.5){score-=8;alerts.push({type:'warning',icon:'🏷️',text:`Ancien prix (${op}) au-dessus du marché (~${mMax}). Fausse promo ?`});}}
+        }
+    }
+    if(d.brand==='Apple'&&d.ram){score-=3;alerts.push({type:'info',icon:'⚡',text:'RAM inutile pour iPhone.'});}
+    if(d.brand==='Apple'&&d.sim==='Double SIM'&&d.version==='US'){score-=5;alerts.push({type:'info',icon:'📶',text:'iPhones US = eSIM only.'});}
+    if(d.unlock==='Bloqué opérateur'){score-=3;alerts.push({type:'warning',icon:'🔓',text:'Bloqué opérateur — mentionne-le.'});}
+    // FIX #3: hard cap — iCloud connected can never be green
+    let finalScore=Math.max(0,Math.min(100,score));
+    if(icloudBlock&&finalScore>=55)finalScore=Math.min(finalScore,50);
+    return{score:finalScore,alerts};
+}
 
 // =====================================================================
 // UI LOGIC
@@ -724,7 +797,8 @@ function generateTextPost(){
     renderReliability(check);
 
     const isApple=brand==='Apple';
-    const phoneName=`${isApple?'':brand+' '}${model}`;
+    const displayBrand=brand==='Autre'?($('customBrand').value.trim()||brand):brand;
+    const phoneName=`${isApple?'':displayBrand+' '}${model}`;
     const fullName=`${phoneName}${storage?' '+storage:''}`;
     let post='';
 
@@ -737,21 +811,21 @@ function generateTextPost(){
         if(ram&&!isApple)post+=`⚡ RAM : ${ram}\n`;
         if(sim)post+=`📶 ${sim}\n`;if(unlock)post+=`🔓 ${unlock}\n`;
         if(faceid&&faceid!=='N/A')post+=`🔐 Face ID : ${faceid}\n`;
-        if(screen)post+=`📱 Écran : ${screen}\n`;if(warranty)post+=`🛡️ ${warranty}\n`;
+        if(screen)post+=`🖥️ Écran : ${screen}\n`;if(warranty)post+=`${warranty==='Sans garantie'?'⚠️':'🛡️'} ${warranty}\n`;
         if(accessories.length)post+=`\n🎁 ${accessories.join(' + ')}\n`;
         post+=`\n━━━━━━━━━━━━━━━━━━━━\n`;
         if(hasPromo)post+=`💰 ~${fmtPrice(oldPrice)} DH~ ➜ ${fmtPrice(price)} DH 🔥\n`;
         else post+=`💰 Prix : ${fmtPrice(price)} DH\n`;
         post+=`━━━━━━━━━━━━━━━━━━━━\n\n`;
         if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
-        post+=`\n⚡ Dépêchez-vous, stock limité !`;
+        if(shop||phone)post+=`\n`;post+=`💬 DM pour plus d'infos !`;
     }else if(template==='promo'){
         post=`🔥🔥🔥 OFFRE DE FOLIE 🔥🔥🔥\n\n📱 ${fullName.toUpperCase()}\n\n`;
         if(hasPromo){post+=`❌ Ancien prix : ${fmtPrice(oldPrice)} DH\n✅ NOUVEAU PRIX : ${fmtPrice(price)} DH 💥\n`;const sav=parseInt(oldPrice)-pNum;if(sav>0)post+=`💸 Économie : ${fmtPrice(sav)} DH !\n`;}else post+=`💥 PRIX CHOC : ${fmtPrice(price)} DH 💥\n`;
-        post+='\n';if(condition)post+=`✅ ${condition}\n`;if(battery)post+=`🔋 Batterie ${battery==='79-'?'< 80':battery}%\n`;
-        if(storage)post+=`💾 ${storage}\n`;if(color)post+=`🎨 ${color}\n`;if(version)post+=`${VER_EMOJI[version]||'🌍'} ${version}\n`;
+        post+='\n';if(condition)post+=`${COND_EMOJI[condition]||'✅'} ${condition}\n`;if(battery)post+=`🔋 Batterie ${battery==='79-'?'< 80':battery}%\n`;
+        if(color)post+=`🎨 ${color}\n`;if(version)post+=`${VER_EMOJI[version]||'🌍'} ${version}\n`;
         if(ram&&!isApple)post+=`⚡ ${ram} RAM\n`;if(sim)post+=`📶 ${sim}\n`;if(faceid&&faceid!=='N/A')post+=`🔐 Face ID : ${faceid}\n`;
-        if(screen)post+=`📱 Écran ${screen}\n`;if(warranty)post+=`🛡️ ${warranty}\n`;
+        if(screen)post+=`🖥️ Écran ${screen}\n`;if(warranty)post+=`${warranty==='Sans garantie'?'⚠️':'🛡️'} ${warranty}\n`;
         if(accessories.length)post+=`\n🎁 Avec : ${accessories.join(', ')}\n`;
         post+=`\n📍 Viens le récupérer !\n`;if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
         post+=`\n⏰ Quantité LIMITÉE !`;
@@ -770,7 +844,7 @@ function generateTextPost(){
     }else if(template==='urgent'){
         post=`⚡⚡⚡ VENTE FLASH ⚡⚡⚡\n\n📱 ${fullName.toUpperCase()}\n\n`;
         let det=[];if(condition)det.push(condition);if(battery)det.push(`Bat. ${battery==='79-'?'<80':battery}%`);
-        if(storage)det.push(storage);if(color)det.push(color);if(version)det.push(`${VER_EMOJI[version]||''} ${version}`);
+        if(color)det.push(color);if(version)det.push(`${VER_EMOJI[version]||''} ${version}`);
         if(faceid==='Fonctionne')det.push('Face ID ✅');if(screen)det.push(`Écran ${screen}`);
         if(det.length)post+=det.join(' | ')+'\n\n';
         if(accessories.length)post+=`🎁 + ${accessories.join(' + ')}\n\n`;
@@ -782,7 +856,7 @@ function generateTextPost(){
         if(condition)lines.push(`• ${condition}`);if(battery)lines.push(`• Batterie ${battery==='79-'?'< 80':battery}%`);
         if(color)lines.push(`• ${color}`);if(version)lines.push(`• Version ${version}`);
         if(ram&&!isApple)lines.push(`• ${ram} RAM`);if(sim)lines.push(`• ${sim}`);
-        if(faceid&&faceid!=='N/A')lines.push(`• Face ID : ${faceid}`);if(screen)lines.push(`• Écran ${screen}`);
+        if(faceid&&faceid!=='N/A')lines.push(`• Face ID : ${faceid}`);if(screen)lines.push(`• Écran : ${screen}`);
         if(warranty)lines.push(`• ${warranty}`);if(lines.length)post+=lines.join('\n')+'\n';
         if(accessories.length)post+=`• Avec ${accessories.join(', ')}\n`;
         post+=`\nPrix : ${fmtPrice(price)} DH`;if(hasPromo)post+=` (au lieu de ${fmtPrice(oldPrice)} DH)`;
@@ -793,10 +867,10 @@ function generateTextPost(){
     const realBrand=brand==='Autre'?($('customBrand').value.trim()||'phone'):brand;
     const bTag=realBrand.toLowerCase().replace(/\s/g,'');
     const mTag=model.toLowerCase().replace(/[\s+()]/g,'').replace(/'/g,'');
-    let h=`#${bTag} #${mTag} #smartphone #occasion #rabat #maroc #morocco #cornermobile #telephone`;
+    let h=`#${mTag} #smartphone #occasion #rabat #maroc #morocco #cornermobile #telephone`;
     if(brand==='Apple')h+=' #iphone #apple #ios #iphoneonly #iphonemaroc';
     else if(brand==='Samsung')h+=' #samsung #galaxy #android #samsungmaroc';
-    else h+=' #android';
+    else h+=` #${bTag} #android`;
     h+=' #bonplan #prixchoc #hmizat #promo #smartphonemaroc #telephoneoccasion #ventemaroc #bonneaffaire #telephonepascher';
     if(condition==='Neuf')h+=' #neuf #new';
 
@@ -842,12 +916,12 @@ function drawWatermark(ctx,w,h,dark){
     const tm=ctx.measureText(text);
     const px=w-30,py=h-28,pad=8;
     // pill bg
-    ctx.globalAlpha=dark?0.06:0.12;
-    ctx.fillStyle=dark?'#000':'#000';
+    ctx.globalAlpha=dark?0.1:0.12;
+    ctx.fillStyle='#000';
     roundRect(ctx,px-tm.width-pad,py-20-pad,tm.width+pad*2,20+pad*2,6);ctx.fill();
     // text
-    ctx.globalAlpha=dark?0.12:0.3;
-    ctx.fillStyle=dark?'#000':CM_BLUE;
+    ctx.globalAlpha=dark?0.25:0.3;
+    ctx.fillStyle=dark?'#555':CM_BLUE;
     ctx.fillText(text,px,py);
     ctx.restore();
 }
@@ -1139,18 +1213,19 @@ $('btnGenerate').addEventListener('click',function(){
     renderReliability(check);
 
     const isApple=brand==='Apple';
-    const phoneName=`${isApple?'':brand+' '}${model}`;
+    const displayBrand=brand==='Autre'?($('customBrand').value.trim()||brand):brand;
+    const phoneName=`${isApple?'':displayBrand+' '}${model}`;
     const fullName=`${phoneName}${storage?' '+storage:''}`;
 
     $('outputSection').classList.remove('visible');
 
-    generateImage({brand,model,storage,fullName,phoneName,price,oldPrice,hasPromo,condition,battery:$('battery').value,color:$('color').value,version:$('version').value,faceid:$('faceid').value,screen:$('screen').value,warranty:$('warranty').value,shop:$('shop').value,phoneNum:$('phone').value}).then(()=>{
+    generateImage({brand:displayBrand,model,storage,fullName,phoneName,price,oldPrice,hasPromo,condition,battery:$('battery').value,color:$('color').value,version:$('version').value,faceid:$('faceid').value,screen:$('screen').value,warranty:$('warranty').value,shop:$('shop').value,phoneNum:$('phone').value}).then(()=>{
         // FIX: hashtags also in image mode, with #neuf support
         const realBrand=brand==='Autre'?($('customBrand').value.trim()||'phone'):brand;
         const bTag=realBrand.toLowerCase().replace(/\s/g,'');const mTag=model.toLowerCase().replace(/[\s+()]/g,'').replace(/'/g,'');
-        let h=`#${bTag} #${mTag} #smartphone #occasion #rabat #maroc #morocco #cornermobile #telephone`;
+        let h=`#${mTag} #smartphone #occasion #rabat #maroc #morocco #cornermobile #telephone`;
         if(brand==='Apple')h+=' #iphone #apple #ios #iphoneonly #iphonemaroc';
-        else if(brand==='Samsung')h+=' #samsung #galaxy #android #samsungmaroc';else h+=' #android';
+        else if(brand==='Samsung')h+=' #samsung #galaxy #android #samsungmaroc';else h+=` #${bTag} #android`;
         h+=' #bonplan #prixchoc #hmizat #promo #smartphonemaroc #telephoneoccasion #ventemaroc #bonneaffaire #telephonepascher';
         if(condition==='Neuf')h+=' #neuf #new';
         $('outputSection').classList.add('visible');$('outputText').textContent='';$('outputPhoto').style.display='none';
