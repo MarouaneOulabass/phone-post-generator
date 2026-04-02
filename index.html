@@ -280,6 +280,10 @@
                 <input type="file" id="photoInput" accept="image/*">
                 <button class="photo-remove" id="photoRemove" aria-label="Supprimer la photo">✕</button>
             </div>
+            <label class="cb-item" id="photoVerifyWrap" style="display:none;margin-top:10px;">
+                <input type="checkbox" id="photoVerified">
+                <span class="ck"></span>🔍 Je confirme : la photo correspond au modèle et à la couleur
+            </label>
         </div>
         <!-- INFOS TÉLÉPHONE -->
         <div class="section">
@@ -452,6 +456,14 @@
                 <label class="cb-item"><input type="checkbox" value="Câble"><span class="ck"></span>🔗 Câble</label>
             </div>
         </div>
+        <!-- NOTES -->
+        <div class="section">
+            <div class="section-title">📝 Notes supplémentaires</div>
+            <div class="form-group">
+                <label for="notes">Détails libres (optionnel)</label>
+                <textarea id="notes" placeholder="Ex: Petit rayure sur le dos, livraison possible sur Rabat..." style="width:100%;padding:12px 14px;background:var(--input-bg);border:1px solid var(--card-border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;min-height:70px;resize:vertical;outline:none;"></textarea>
+            </div>
+        </div>
         <!-- PRIX -->
         <div class="section">
             <div class="section-title">💰 Prix</div>
@@ -565,9 +577,9 @@
 // =====================================================================
 // DATA — same as before (models, priceRef, etc.)
 // =====================================================================
-const MODELS={Apple:['iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16','iPhone 16e','iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15','iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14','iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13 Mini','iPhone 13','iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12 Mini','iPhone 12','iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11','iPhone SE (2022)','iPhone SE (2020)','iPhone XS Max','iPhone XS','iPhone XR','iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7'],Samsung:['Galaxy S25 Ultra','Galaxy S25+','Galaxy S25','Galaxy S24 Ultra','Galaxy S24+','Galaxy S24','Galaxy S24 FE','Galaxy S23 Ultra','Galaxy S23+','Galaxy S23','Galaxy S23 FE','Galaxy S22 Ultra','Galaxy S22+','Galaxy S22','Galaxy S21 Ultra','Galaxy S21+','Galaxy S21','Galaxy S21 FE','Galaxy Z Fold 6','Galaxy Z Fold 5','Galaxy Z Fold 4','Galaxy Z Flip 6','Galaxy Z Flip 5','Galaxy Z Flip 4','Galaxy Note 20 Ultra','Galaxy Note 20','Galaxy Note 10+','Galaxy Note 10','Galaxy A56','Galaxy A55','Galaxy A54','Galaxy A53','Galaxy A52','Galaxy A36','Galaxy A35','Galaxy A34','Galaxy A25','Galaxy A16','Galaxy A15','Galaxy A05','Galaxy M35','Galaxy M15'],Huawei:['Pura 70 Ultra','Pura 70 Pro','Pura 70','Mate 60 Pro','Mate 60','Mate 50 Pro','Mate 50','P60 Pro','P60','P50 Pro','P50','P40 Pro+','P40 Pro','P40','P40 Lite','P30 Pro','P30','P30 Lite','Nova 12','Nova 11','Nova 10','Nova 9'],Xiaomi:['Xiaomi 15 Ultra','Xiaomi 15 Pro','Xiaomi 15','Xiaomi 14 Ultra','Xiaomi 14 Pro','Xiaomi 14','Xiaomi 13 Ultra','Xiaomi 13 Pro','Xiaomi 13','Redmi Note 14 Pro+','Redmi Note 14 Pro','Redmi Note 14','Redmi Note 13 Pro+','Redmi Note 13 Pro','Redmi Note 13','Redmi Note 12 Pro+','Redmi Note 12 Pro','Redmi Note 12','Redmi 14','Redmi 13','Redmi 12','POCO F7 Pro','POCO F7','POCO F6 Pro','POCO F6','POCO F5','POCO X7 Pro','POCO X7','POCO X6 Pro','POCO X6','POCO X5 Pro','POCO X5','POCO M6 Pro','POCO M6'],Oppo:['Find X7 Ultra','Find X7','Find X6 Pro','Find X5 Pro','Reno 12 Pro','Reno 12','Reno 11 Pro','Reno 11','Reno 10 Pro+','Reno 10 Pro','Reno 10','A98','A78','A58','A38','A18'],Realme:['GT 5 Pro','GT 5','GT Neo 5','12 Pro+','12 Pro','12','11 Pro+','11 Pro','11','C67','C55','C53'],OnePlus:['13','12','12R','11','11R','Nord 4','Nord 3','Nord CE 4','Nord CE 3','10 Pro','10T','9 Pro','9'],Google:['Pixel 9 Pro XL','Pixel 9 Pro','Pixel 9','Pixel 9a','Pixel 8 Pro','Pixel 8','Pixel 8a','Pixel 7 Pro','Pixel 7','Pixel 7a','Pixel 6 Pro','Pixel 6','Pixel 6a'],Honor:['Magic 7 Pro','Magic 7','Magic 6 Pro','Magic 6','Magic 5 Pro','200 Pro','200','90','90 Lite','X9b','X8b','X7b'],Nothing:['Phone (2a) Plus','Phone (2a)','Phone (2)','Phone (1)'],Tecno:['Phantom X2 Pro','Phantom X2','Camon 30 Pro','Camon 30','Camon 20 Pro','Camon 20','Spark 20 Pro+','Spark 20 Pro','Spark 20','Pova 6 Pro','Pova 6','Pova 5'],Infinix:['Zero 30','Zero Ultra','Note 40 Pro','Note 40','Note 30 Pro','Note 30','Hot 40 Pro','Hot 40','Hot 30','Smart 8'],Autre:[]};
+const MODELS={Apple:['iPhone 17 Pro Max','iPhone 17 Pro','iPhone 17 Air','iPhone 17','iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16','iPhone 16e','iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15','iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14','iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13 Mini','iPhone 13','iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12 Mini','iPhone 12','iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11','iPhone SE (2022)','iPhone SE (2020)','iPhone XS Max','iPhone XS','iPhone XR','iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7'],Samsung:['Galaxy S25 Ultra','Galaxy S25+','Galaxy S25','Galaxy S24 Ultra','Galaxy S24+','Galaxy S24','Galaxy S24 FE','Galaxy S23 Ultra','Galaxy S23+','Galaxy S23','Galaxy S23 FE','Galaxy S22 Ultra','Galaxy S22+','Galaxy S22','Galaxy S21 Ultra','Galaxy S21+','Galaxy S21','Galaxy S21 FE','Galaxy Z Fold 6','Galaxy Z Fold 5','Galaxy Z Fold 4','Galaxy Z Flip 6','Galaxy Z Flip 5','Galaxy Z Flip 4','Galaxy Note 20 Ultra','Galaxy Note 20','Galaxy Note 10+','Galaxy Note 10','Galaxy A56','Galaxy A55','Galaxy A54','Galaxy A53','Galaxy A52','Galaxy A36','Galaxy A35','Galaxy A34','Galaxy A25','Galaxy A16','Galaxy A15','Galaxy A05','Galaxy M35','Galaxy M15'],Huawei:['Pura 70 Ultra','Pura 70 Pro','Pura 70','Mate 60 Pro','Mate 60','Mate 50 Pro','Mate 50','P60 Pro','P60','P50 Pro','P50','P40 Pro+','P40 Pro','P40','P40 Lite','P30 Pro','P30','P30 Lite','Nova 12','Nova 11','Nova 10','Nova 9'],Xiaomi:['Xiaomi 15 Ultra','Xiaomi 15 Pro','Xiaomi 15','Xiaomi 14 Ultra','Xiaomi 14 Pro','Xiaomi 14','Xiaomi 13 Ultra','Xiaomi 13 Pro','Xiaomi 13','Redmi Note 14 Pro+','Redmi Note 14 Pro','Redmi Note 14','Redmi Note 13 Pro+','Redmi Note 13 Pro','Redmi Note 13','Redmi Note 12 Pro+','Redmi Note 12 Pro','Redmi Note 12','Redmi 14','Redmi 13','Redmi 12','POCO F7 Pro','POCO F7','POCO F6 Pro','POCO F6','POCO F5','POCO X7 Pro','POCO X7','POCO X6 Pro','POCO X6','POCO X5 Pro','POCO X5','POCO M6 Pro','POCO M6'],Oppo:['Find X7 Ultra','Find X7','Find X6 Pro','Find X5 Pro','Reno 12 Pro','Reno 12','Reno 11 Pro','Reno 11','Reno 10 Pro+','Reno 10 Pro','Reno 10','A98','A78','A58','A38','A18'],Realme:['GT 5 Pro','GT 5','GT Neo 5','12 Pro+','12 Pro','12','11 Pro+','11 Pro','11','C67','C55','C53'],OnePlus:['13','12','12R','11','11R','Nord 4','Nord 3','Nord CE 4','Nord CE 3','10 Pro','10T','9 Pro','9'],Google:['Pixel 9 Pro XL','Pixel 9 Pro','Pixel 9','Pixel 9a','Pixel 8 Pro','Pixel 8','Pixel 8a','Pixel 7 Pro','Pixel 7','Pixel 7a','Pixel 6 Pro','Pixel 6','Pixel 6a'],Honor:['Magic 7 Pro','Magic 7','Magic 6 Pro','Magic 6','Magic 5 Pro','200 Pro','200','90','90 Lite','X9b','X8b','X7b'],Nothing:['Phone (2a) Plus','Phone (2a)','Phone (2)','Phone (1)'],Tecno:['Phantom X2 Pro','Phantom X2','Camon 30 Pro','Camon 30','Camon 20 Pro','Camon 20','Spark 20 Pro+','Spark 20 Pro','Spark 20','Pova 6 Pro','Pova 6','Pova 5'],Infinix:['Zero 30','Zero Ultra','Note 40 Pro','Note 40','Note 30 Pro','Note 30','Hot 40 Pro','Hot 40','Hot 30','Smart 8'],Autre:[]};
 
-const PRICE_REF={'iPhone 16 Pro Max':{min:14000,max:19000},'iPhone 16 Pro':{min:12000,max:16000},'iPhone 16 Plus':{min:10000,max:13000},'iPhone 16':{min:9000,max:12000},'iPhone 16e':{min:5500,max:8000},'iPhone 15 Pro Max':{min:11000,max:16000},'iPhone 15 Pro':{min:9500,max:13500},'iPhone 15 Plus':{min:8000,max:11000},'iPhone 15':{min:7000,max:10000},'iPhone 14 Pro Max':{min:8500,max:12500},'iPhone 14 Pro':{min:7500,max:11000},'iPhone 14 Plus':{min:6000,max:8500},'iPhone 14':{min:5500,max:8000},'iPhone 13 Pro Max':{min:7000,max:10500},'iPhone 13 Pro':{min:6000,max:9000},'iPhone 13 Mini':{min:4000,max:6000},'iPhone 13':{min:4500,max:7000},'iPhone 12 Pro Max':{min:5500,max:8000},'iPhone 12 Pro':{min:4500,max:7000},'iPhone 12 Mini':{min:3000,max:4500},'iPhone 12':{min:3500,max:5500},'iPhone 11 Pro Max':{min:4500,max:6500},'iPhone 11 Pro':{min:3800,max:5500},'iPhone 11':{min:2800,max:4500},'iPhone SE (2022)':{min:2500,max:4000},'iPhone SE (2020)':{min:1800,max:3000},'iPhone XS Max':{min:3000,max:4500},'iPhone XS':{min:2500,max:3800},'iPhone XR':{min:2000,max:3200},'iPhone X':{min:2000,max:3200},'iPhone 8 Plus':{min:1500,max:2500},'iPhone 8':{min:1200,max:2000},'iPhone 7 Plus':{min:1200,max:2000},'iPhone 7':{min:900,max:1500},'Galaxy S25 Ultra':{min:12000,max:17000},'Galaxy S25+':{min:9000,max:13000},'Galaxy S25':{min:7500,max:11000},'Galaxy S24 Ultra':{min:10000,max:15000},'Galaxy S24+':{min:7500,max:11000},'Galaxy S24':{min:6000,max:9500},'Galaxy S24 FE':{min:4500,max:7000},'Galaxy S23 Ultra':{min:8000,max:12000},'Galaxy S23+':{min:5500,max:8500},'Galaxy S23':{min:4500,max:7500},'Galaxy S23 FE':{min:3500,max:5500},'Galaxy S22 Ultra':{min:6000,max:9500},'Galaxy S22+':{min:4000,max:6500},'Galaxy S22':{min:3500,max:5500},'Galaxy S21 Ultra':{min:5000,max:8000},'Galaxy S21+':{min:3500,max:5500},'Galaxy S21':{min:3000,max:4800},'Galaxy S21 FE':{min:2500,max:4000},'Galaxy Z Fold 6':{min:14000,max:20000},'Galaxy Z Fold 5':{min:10000,max:16000},'Galaxy Z Fold 4':{min:7000,max:12000},'Galaxy Z Flip 6':{min:8000,max:12000},'Galaxy Z Flip 5':{min:5500,max:9000},'Galaxy Z Flip 4':{min:4000,max:6500},'Galaxy Note 20 Ultra':{min:4500,max:7000},'Galaxy Note 20':{min:3000,max:5000},'Galaxy Note 10+':{min:2800,max:4200},'Galaxy Note 10':{min:2200,max:3500},'Galaxy A56':{min:3000,max:4500},'Galaxy A55':{min:2800,max:4200},'Galaxy A54':{min:2200,max:3500},'Galaxy A53':{min:1800,max:2800},'Galaxy A52':{min:1500,max:2500},'Galaxy A36':{min:2300,max:3500},'Galaxy A35':{min:2200,max:3200},'Galaxy A34':{min:1800,max:2800},'Galaxy A25':{min:1500,max:2300},'Galaxy A16':{min:1300,max:2000},'Galaxy A15':{min:1200,max:1800},'Galaxy A05':{min:800,max:1300},'Galaxy M35':{min:2000,max:3000},'Galaxy M15':{min:1200,max:1800},'Pura 70 Ultra':{min:7000,max:10000},'Pura 70 Pro':{min:5500,max:8000},'Pura 70':{min:4000,max:6500},'Mate 60 Pro':{min:6000,max:9000},'Mate 60':{min:4500,max:7000},'Mate 50 Pro':{min:4000,max:6000},'Mate 50':{min:3000,max:5000},'P60 Pro':{min:3500,max:5500},'P60':{min:2800,max:4500},'P50 Pro':{min:3000,max:4800},'P50':{min:2500,max:4000},'P40 Pro+':{min:2800,max:4200},'P40 Pro':{min:2200,max:3500},'P40':{min:1800,max:2800},'P40 Lite':{min:1200,max:2000},'P30 Pro':{min:1800,max:3000},'P30':{min:1500,max:2500},'P30 Lite':{min:1000,max:1800},'Nova 12':{min:2000,max:3200},'Nova 11':{min:1800,max:2800},'Nova 10':{min:1500,max:2500},'Nova 9':{min:1200,max:2000},'Xiaomi 15 Ultra':{min:7500,max:11000},'Xiaomi 15 Pro':{min:6000,max:9000},'Xiaomi 15':{min:5000,max:7500},'Xiaomi 14 Ultra':{min:7000,max:11000},'Xiaomi 14 Pro':{min:5500,max:8500},'Xiaomi 14':{min:4500,max:7000},'Xiaomi 13 Ultra':{min:5500,max:8500},'Xiaomi 13 Pro':{min:4000,max:6500},'Xiaomi 13':{min:3000,max:5000},'Redmi Note 14 Pro+':{min:2800,max:4200},'Redmi Note 14 Pro':{min:2200,max:3500},'Redmi Note 14':{min:1600,max:2600},'Redmi Note 13 Pro+':{min:2500,max:3800},'Redmi Note 13 Pro':{min:2000,max:3200},'Redmi Note 13':{min:1500,max:2500},'Redmi Note 12 Pro+':{min:2200,max:3200},'Redmi Note 12 Pro':{min:1800,max:2800},'Redmi Note 12':{min:1300,max:2200},'Redmi 14':{min:1200,max:1800},'Redmi 13':{min:1100,max:1700},'Redmi 12':{min:1000,max:1600},'POCO F7 Pro':{min:4000,max:6000},'POCO F7':{min:3000,max:4500},'POCO F6 Pro':{min:3500,max:5500},'POCO F6':{min:2500,max:4000},'POCO F5':{min:2000,max:3200},'POCO X7 Pro':{min:2500,max:3800},'POCO X7':{min:2000,max:3000},'POCO X6 Pro':{min:2200,max:3500},'POCO X6':{min:1800,max:2800},'POCO X5 Pro':{min:1800,max:2800},'POCO X5':{min:1500,max:2300},'POCO M6 Pro':{min:1500,max:2300},'POCO M6':{min:1200,max:1800},'Find X7 Ultra':{min:5500,max:8500},'Find X7':{min:4000,max:6500},'Find X6 Pro':{min:3500,max:5500},'Find X5 Pro':{min:3000,max:4800},'Reno 12 Pro':{min:3000,max:4500},'Reno 12':{min:2200,max:3500},'Reno 11 Pro':{min:2800,max:4200},'Reno 11':{min:2200,max:3500},'Reno 10 Pro+':{min:2500,max:3800},'Reno 10 Pro':{min:2000,max:3200},'Reno 10':{min:1800,max:2800},'A98':{min:1800,max:2800},'A78':{min:1500,max:2300},'A58':{min:1200,max:2000},'A38':{min:1000,max:1600},'A18':{min:800,max:1300},'GT 5 Pro':{min:3000,max:4500},'GT 5':{min:2500,max:3800},'GT Neo 5':{min:2200,max:3500},'12 Pro+':{min:2500,max:3800},'12 Pro':{min:2000,max:3200},'12':{min:1500,max:2500},'11 Pro+':{min:2000,max:3000},'11 Pro':{min:1600,max:2500},'11':{min:1300,max:2000},'C67':{min:1000,max:1600},'C55':{min:900,max:1400},'C53':{min:800,max:1300},'13':{min:5000,max:7500},'10 Pro':{min:3000,max:4500},'10T':{min:2500,max:3800},'9 Pro':{min:2500,max:3800},'9':{min:2000,max:3000},'Nord 4':{min:2500,max:3500},'Nord 3':{min:2000,max:3000},'Nord CE 4':{min:1800,max:2800},'Nord CE 3':{min:1500,max:2300},'Pixel 9 Pro XL':{min:8000,max:12000},'Pixel 9 Pro':{min:7000,max:10000},'Pixel 9':{min:5500,max:8000},'Pixel 9a':{min:4000,max:6000},'Pixel 8 Pro':{min:5000,max:7500},'Pixel 8':{min:3500,max:5500},'Pixel 8a':{min:3000,max:4500},'Pixel 7 Pro':{min:3500,max:5500},'Pixel 7':{min:2800,max:4200},'Pixel 7a':{min:2500,max:3800},'Pixel 6 Pro':{min:2800,max:4200},'Pixel 6':{min:2200,max:3500},'Pixel 6a':{min:1800,max:2800},'Magic 7 Pro':{min:5000,max:7500},'Magic 7':{min:4000,max:6000},'Magic 6 Pro':{min:4000,max:6000},'Magic 6':{min:3000,max:4500},'Magic 5 Pro':{min:3500,max:5500},'200 Pro':{min:2500,max:3800},'200':{min:2000,max:3000},'90':{min:1800,max:2800},'90 Lite':{min:1300,max:2000},'X9b':{min:1500,max:2300},'X8b':{min:1200,max:1800},'X7b':{min:1000,max:1500},'Phone (2a) Plus':{min:2200,max:3500},'Phone (2a)':{min:1800,max:2800},'Phone (2)':{min:2500,max:3800},'Phone (1)':{min:2000,max:3000},'Phantom X2 Pro':{min:2500,max:3800},'Phantom X2':{min:2000,max:3000},'Camon 30 Pro':{min:1800,max:2800},'Camon 30':{min:1500,max:2300},'Camon 20 Pro':{min:1500,max:2300},'Camon 20':{min:1200,max:1800},'Spark 20 Pro+':{min:1200,max:2000},'Spark 20 Pro':{min:1000,max:1600},'Spark 20':{min:800,max:1300},'Pova 6 Pro':{min:1300,max:2100},'Pova 6':{min:1100,max:1700},'Pova 5':{min:900,max:1400},'Zero 30':{min:2000,max:3000},'Zero Ultra':{min:2200,max:3500},'Note 40 Pro':{min:1500,max:2300},'Note 40':{min:1200,max:1800},'Note 30 Pro':{min:1300,max:2000},'Note 30':{min:1100,max:1700},'Hot 40 Pro':{min:1000,max:1600},'Hot 40':{min:800,max:1300},'Hot 30':{min:700,max:1100},'Smart 8':{min:700,max:1100}};
+const PRICE_REF={'iPhone 17 Pro Max':{min:16000,max:22000},'iPhone 17 Pro':{min:13500,max:18000},'iPhone 17 Air':{min:11000,max:15000},'iPhone 17':{min:10000,max:13500},'iPhone 16 Pro Max':{min:14000,max:19000},'iPhone 16 Pro':{min:12000,max:16000},'iPhone 16 Plus':{min:10000,max:13000},'iPhone 16':{min:9000,max:12000},'iPhone 16e':{min:5500,max:8000},'iPhone 15 Pro Max':{min:11000,max:16000},'iPhone 15 Pro':{min:9500,max:13500},'iPhone 15 Plus':{min:8000,max:11000},'iPhone 15':{min:7000,max:10000},'iPhone 14 Pro Max':{min:8500,max:12500},'iPhone 14 Pro':{min:7500,max:11000},'iPhone 14 Plus':{min:6000,max:8500},'iPhone 14':{min:5500,max:8000},'iPhone 13 Pro Max':{min:7000,max:10500},'iPhone 13 Pro':{min:6000,max:9000},'iPhone 13 Mini':{min:4000,max:6000},'iPhone 13':{min:4500,max:7000},'iPhone 12 Pro Max':{min:5500,max:8000},'iPhone 12 Pro':{min:4500,max:7000},'iPhone 12 Mini':{min:3000,max:4500},'iPhone 12':{min:3500,max:5500},'iPhone 11 Pro Max':{min:4500,max:6500},'iPhone 11 Pro':{min:3800,max:5500},'iPhone 11':{min:2800,max:4500},'iPhone SE (2022)':{min:2500,max:4000},'iPhone SE (2020)':{min:1800,max:3000},'iPhone XS Max':{min:3000,max:4500},'iPhone XS':{min:2500,max:3800},'iPhone XR':{min:2000,max:3200},'iPhone X':{min:2000,max:3200},'iPhone 8 Plus':{min:1500,max:2500},'iPhone 8':{min:1200,max:2000},'iPhone 7 Plus':{min:1200,max:2000},'iPhone 7':{min:900,max:1500},'Galaxy S25 Ultra':{min:12000,max:17000},'Galaxy S25+':{min:9000,max:13000},'Galaxy S25':{min:7500,max:11000},'Galaxy S24 Ultra':{min:10000,max:15000},'Galaxy S24+':{min:7500,max:11000},'Galaxy S24':{min:6000,max:9500},'Galaxy S24 FE':{min:4500,max:7000},'Galaxy S23 Ultra':{min:8000,max:12000},'Galaxy S23+':{min:5500,max:8500},'Galaxy S23':{min:4500,max:7500},'Galaxy S23 FE':{min:3500,max:5500},'Galaxy S22 Ultra':{min:6000,max:9500},'Galaxy S22+':{min:4000,max:6500},'Galaxy S22':{min:3500,max:5500},'Galaxy S21 Ultra':{min:5000,max:8000},'Galaxy S21+':{min:3500,max:5500},'Galaxy S21':{min:3000,max:4800},'Galaxy S21 FE':{min:2500,max:4000},'Galaxy Z Fold 6':{min:14000,max:20000},'Galaxy Z Fold 5':{min:10000,max:16000},'Galaxy Z Fold 4':{min:7000,max:12000},'Galaxy Z Flip 6':{min:8000,max:12000},'Galaxy Z Flip 5':{min:5500,max:9000},'Galaxy Z Flip 4':{min:4000,max:6500},'Galaxy Note 20 Ultra':{min:4500,max:7000},'Galaxy Note 20':{min:3000,max:5000},'Galaxy Note 10+':{min:2800,max:4200},'Galaxy Note 10':{min:2200,max:3500},'Galaxy A56':{min:3000,max:4500},'Galaxy A55':{min:2800,max:4200},'Galaxy A54':{min:2200,max:3500},'Galaxy A53':{min:1800,max:2800},'Galaxy A52':{min:1500,max:2500},'Galaxy A36':{min:2300,max:3500},'Galaxy A35':{min:2200,max:3200},'Galaxy A34':{min:1800,max:2800},'Galaxy A25':{min:1500,max:2300},'Galaxy A16':{min:1300,max:2000},'Galaxy A15':{min:1200,max:1800},'Galaxy A05':{min:800,max:1300},'Galaxy M35':{min:2000,max:3000},'Galaxy M15':{min:1200,max:1800},'Pura 70 Ultra':{min:7000,max:10000},'Pura 70 Pro':{min:5500,max:8000},'Pura 70':{min:4000,max:6500},'Mate 60 Pro':{min:6000,max:9000},'Mate 60':{min:4500,max:7000},'Mate 50 Pro':{min:4000,max:6000},'Mate 50':{min:3000,max:5000},'P60 Pro':{min:3500,max:5500},'P60':{min:2800,max:4500},'P50 Pro':{min:3000,max:4800},'P50':{min:2500,max:4000},'P40 Pro+':{min:2800,max:4200},'P40 Pro':{min:2200,max:3500},'P40':{min:1800,max:2800},'P40 Lite':{min:1200,max:2000},'P30 Pro':{min:1800,max:3000},'P30':{min:1500,max:2500},'P30 Lite':{min:1000,max:1800},'Nova 12':{min:2000,max:3200},'Nova 11':{min:1800,max:2800},'Nova 10':{min:1500,max:2500},'Nova 9':{min:1200,max:2000},'Xiaomi 15 Ultra':{min:7500,max:11000},'Xiaomi 15 Pro':{min:6000,max:9000},'Xiaomi 15':{min:5000,max:7500},'Xiaomi 14 Ultra':{min:7000,max:11000},'Xiaomi 14 Pro':{min:5500,max:8500},'Xiaomi 14':{min:4500,max:7000},'Xiaomi 13 Ultra':{min:5500,max:8500},'Xiaomi 13 Pro':{min:4000,max:6500},'Xiaomi 13':{min:3000,max:5000},'Redmi Note 14 Pro+':{min:2800,max:4200},'Redmi Note 14 Pro':{min:2200,max:3500},'Redmi Note 14':{min:1600,max:2600},'Redmi Note 13 Pro+':{min:2500,max:3800},'Redmi Note 13 Pro':{min:2000,max:3200},'Redmi Note 13':{min:1500,max:2500},'Redmi Note 12 Pro+':{min:2200,max:3200},'Redmi Note 12 Pro':{min:1800,max:2800},'Redmi Note 12':{min:1300,max:2200},'Redmi 14':{min:1200,max:1800},'Redmi 13':{min:1100,max:1700},'Redmi 12':{min:1000,max:1600},'POCO F7 Pro':{min:4000,max:6000},'POCO F7':{min:3000,max:4500},'POCO F6 Pro':{min:3500,max:5500},'POCO F6':{min:2500,max:4000},'POCO F5':{min:2000,max:3200},'POCO X7 Pro':{min:2500,max:3800},'POCO X7':{min:2000,max:3000},'POCO X6 Pro':{min:2200,max:3500},'POCO X6':{min:1800,max:2800},'POCO X5 Pro':{min:1800,max:2800},'POCO X5':{min:1500,max:2300},'POCO M6 Pro':{min:1500,max:2300},'POCO M6':{min:1200,max:1800},'Find X7 Ultra':{min:5500,max:8500},'Find X7':{min:4000,max:6500},'Find X6 Pro':{min:3500,max:5500},'Find X5 Pro':{min:3000,max:4800},'Reno 12 Pro':{min:3000,max:4500},'Reno 12':{min:2200,max:3500},'Reno 11 Pro':{min:2800,max:4200},'Reno 11':{min:2200,max:3500},'Reno 10 Pro+':{min:2500,max:3800},'Reno 10 Pro':{min:2000,max:3200},'Reno 10':{min:1800,max:2800},'A98':{min:1800,max:2800},'A78':{min:1500,max:2300},'A58':{min:1200,max:2000},'A38':{min:1000,max:1600},'A18':{min:800,max:1300},'GT 5 Pro':{min:3000,max:4500},'GT 5':{min:2500,max:3800},'GT Neo 5':{min:2200,max:3500},'12 Pro+':{min:2500,max:3800},'12 Pro':{min:2000,max:3200},'12':{min:1500,max:2500},'11 Pro+':{min:2000,max:3000},'11 Pro':{min:1600,max:2500},'11':{min:1300,max:2000},'C67':{min:1000,max:1600},'C55':{min:900,max:1400},'C53':{min:800,max:1300},'13':{min:5000,max:7500},'10 Pro':{min:3000,max:4500},'10T':{min:2500,max:3800},'9 Pro':{min:2500,max:3800},'9':{min:2000,max:3000},'Nord 4':{min:2500,max:3500},'Nord 3':{min:2000,max:3000},'Nord CE 4':{min:1800,max:2800},'Nord CE 3':{min:1500,max:2300},'Pixel 9 Pro XL':{min:8000,max:12000},'Pixel 9 Pro':{min:7000,max:10000},'Pixel 9':{min:5500,max:8000},'Pixel 9a':{min:4000,max:6000},'Pixel 8 Pro':{min:5000,max:7500},'Pixel 8':{min:3500,max:5500},'Pixel 8a':{min:3000,max:4500},'Pixel 7 Pro':{min:3500,max:5500},'Pixel 7':{min:2800,max:4200},'Pixel 7a':{min:2500,max:3800},'Pixel 6 Pro':{min:2800,max:4200},'Pixel 6':{min:2200,max:3500},'Pixel 6a':{min:1800,max:2800},'Magic 7 Pro':{min:5000,max:7500},'Magic 7':{min:4000,max:6000},'Magic 6 Pro':{min:4000,max:6000},'Magic 6':{min:3000,max:4500},'Magic 5 Pro':{min:3500,max:5500},'200 Pro':{min:2500,max:3800},'200':{min:2000,max:3000},'90':{min:1800,max:2800},'90 Lite':{min:1300,max:2000},'X9b':{min:1500,max:2300},'X8b':{min:1200,max:1800},'X7b':{min:1000,max:1500},'Phone (2a) Plus':{min:2200,max:3500},'Phone (2a)':{min:1800,max:2800},'Phone (2)':{min:2500,max:3800},'Phone (1)':{min:2000,max:3000},'Phantom X2 Pro':{min:2500,max:3800},'Phantom X2':{min:2000,max:3000},'Camon 30 Pro':{min:1800,max:2800},'Camon 30':{min:1500,max:2300},'Camon 20 Pro':{min:1500,max:2300},'Camon 20':{min:1200,max:1800},'Spark 20 Pro+':{min:1200,max:2000},'Spark 20 Pro':{min:1000,max:1600},'Spark 20':{min:800,max:1300},'Pova 6 Pro':{min:1300,max:2100},'Pova 6':{min:1100,max:1700},'Pova 5':{min:900,max:1400},'Zero 30':{min:2000,max:3000},'Zero Ultra':{min:2200,max:3500},'Note 40 Pro':{min:1500,max:2300},'Note 40':{min:1200,max:1800},'Note 30 Pro':{min:1300,max:2000},'Note 30':{min:1100,max:1700},'Hot 40 Pro':{min:1000,max:1600},'Hot 40':{min:800,max:1300},'Hot 30':{min:700,max:1100},'Smart 8':{min:700,max:1100}};
 
 const STORAGE_MULT={'32GB':0.8,'64GB':0.9,'128GB':1,'256GB':1.15,'512GB':1.3,'1TB':1.5};
 const COND_MULT={'Neuf':1.25,'Comme neuf':1.1,'Excellent':1,'Très bon':0.9,'Bon':0.8,'Correct':0.65};
@@ -578,7 +590,7 @@ function getModelYear(brand,model){
     if(brand==='Apple'){
         if(/SE \(2020\)/.test(model)) return 2020;
         if(/SE \(2022\)/.test(model)) return 2022;
-        if(/16/.test(model)) return 2024; if(/15/.test(model)) return 2023;
+        if(/17/.test(model)) return 2025; if(/16/.test(model)) return 2024; if(/15/.test(model)) return 2023;
         if(/14/.test(model)) return 2022; if(/13/.test(model)) return 2021;
         if(/12/.test(model)) return 2020; if(/11/.test(model)) return 2019;
         if(/X/.test(model)) return 2017; if(/8/.test(model)) return 2017;
@@ -616,6 +628,9 @@ function getStorageOptions(brand,model){
 
 function getColorOptions(brand,model){
     if(brand==='Apple'){
+        if(/17 Pro/.test(model)) return ['Titane Noir','Titane Blanc','Titane Sable','Titane Vert'];
+        if(/17 Air/.test(model)) return ['Noir','Bleu','Vert','Lumière Stellaire'];
+        if(/17(?! )/.test(model)&&!/Pro|Air/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rose'];
         if(/16 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Désert'];
         if(/15 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Bleu'];
         if(/16e/.test(model)) return ['Noir','Blanc','Bleu'];
@@ -650,6 +665,18 @@ function checkCoherence(d){
     let icloudBlock=false;
     // Photo
     if(!d.hasPhoto){score-=15;alerts.push({type:'critical',icon:'📷',text:'Pas de photo ! Un post sans photo sera ignoré sur Instagram.'});}
+    // Photo quality checks
+    if(d.hasPhoto&&d.photoW&&d.photoH){
+        if(d.photoW<800||d.photoH<800){score-=10;alerts.push({type:'warning',icon:'📷',text:`Photo trop petite (${d.photoW}×${d.photoH}). Min recommandé : 1080px pour Instagram.`});}
+        const ratio=d.photoW/d.photoH;
+        if(ratio>2||ratio<0.3){score-=5;alerts.push({type:'info',icon:'📐',text:'Ratio de la photo inhabituel — recadre pour un meilleur rendu.'});}
+        // Screenshot detection (exact device dimensions)
+        const screenDims=[[1170,2532],[1179,2556],[1284,2778],[1290,2796],[1080,2400],[1080,2340],[1440,3200]];
+        if(screenDims.some(([w,h])=>(d.photoW===w&&d.photoH===h)||(d.photoW===h&&d.photoH===w))){
+            score-=8;alerts.push({type:'warning',icon:'📱',text:'La photo ressemble à une capture d\'écran. Utilise une vraie photo du téléphone.'});
+        }
+    }
+    if(d.hasPhoto&&!d.photoVerified){score-=5;alerts.push({type:'info',icon:'🔍',text:'Vérifie que la photo correspond bien au modèle et à la couleur annoncés.'});}
     // Missing fields
     if(!d.battery){score-=5;alerts.push({type:'warning',icon:'🔋',text:'Batterie non renseignée.'});}
     if(!d.condition){score-=5;alerts.push({type:'warning',icon:'📊',text:'État non renseigné.'});}
@@ -724,7 +751,7 @@ function checkCoherence(d){
 // UI LOGIC
 // =====================================================================
 const $=id=>document.getElementById(id);
-let currentPhotoURL=null, currentPhotoFile=null;
+let currentPhotoURL=null, currentPhotoFile=null, photoW=0, photoH=0;
 
 function updateModels(){const brand=$('brand').value;const ms=$('model');ms.innerHTML='<option value="">-- Choisir --</option>';if(brand&&MODELS[brand])MODELS[brand].forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;ms.appendChild(o);});$('customModelWrap').classList.toggle('visible',brand==='Autre');updateStorage();updateColors();}
 function updateStorage(){const brand=$('brand').value,model=$('model').value;const sel=$('storage'),prev=sel.value;const opts=(brand&&model)?getStorageOptions(brand,model):['32GB','64GB','128GB','256GB','512GB','1TB'];sel.innerHTML='<option value="">--</option>';opts.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s.replace('GB',' GB').replace('TB',' TB');sel.appendChild(o);});if(opts.includes(prev))sel.value=prev;}
@@ -744,14 +771,19 @@ $('photoInput').addEventListener('change',function(){
     const upload=$('photoUpload');
     const img=upload.querySelector('img')||document.createElement('img');
     img.src=currentPhotoURL;img.alt='Photo du téléphone';
+    img.onload=()=>{photoW=img.naturalWidth;photoH=img.naturalHeight;};
     if(!img.parentElement)upload.insertBefore(img,upload.firstChild);
     upload.classList.add('has-photo');
+    $('photoVerifyWrap').style.display='';
+    $('photoVerified').checked=false;
+    $('photoVerifyWrap').classList.remove('checked');
     this.value='';
 });
 function removePhoto(){
-    if(currentPhotoURL){URL.revokeObjectURL(currentPhotoURL);currentPhotoURL=null;currentPhotoFile=null;}
+    if(currentPhotoURL){URL.revokeObjectURL(currentPhotoURL);currentPhotoURL=null;currentPhotoFile=null;photoW=0;photoH=0;}
     const upload=$('photoUpload');const img=upload.querySelector('img');
     if(img)img.remove();upload.classList.remove('has-photo');
+    $('photoVerifyWrap').style.display='none';
 }
 
 // Checkboxes
@@ -797,7 +829,8 @@ function generateTextPost(){
     const pNum=parseInt(price);
     if(!price||isNaN(pNum)||pNum<=0){showToast('⚠️ Entre un prix valide');return;}
 
-    const check=checkCoherence({brand,model,storage,color,battery,condition,version,sim,unlock,faceid,screen,warranty,icloud,price,oldPrice,hasPromo,hasPhoto,accessories,shop,phone,ram});
+    const notes=$('notes').value.trim();
+    const check=checkCoherence({brand,model,storage,color,battery,condition,version,sim,unlock,faceid,screen,warranty,icloud,price,oldPrice,hasPromo,hasPhoto,photoW,photoH,photoVerified:$('photoVerified').checked,accessories,shop,phone,ram});
     renderReliability(check);
 
     const isApple=brand==='Apple';
@@ -822,6 +855,7 @@ function generateTextPost(){
         else post+=`💰 Prix : ${fmtPrice(price)} DH\n`;
         post+=`━━━━━━━━━━━━━━━━━━━━\n\n`;
         if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
+        if(notes)post+=`\n📋 ${notes}\n`;
         if(shop||phone)post+=`\n`;post+=`💬 DM pour plus d'infos !`;
     }else if(template==='promo'){
         post=`🔥🔥🔥 OFFRE DE FOLIE 🔥🔥🔥\n\n📱 ${fullName.toUpperCase()}\n\n`;
@@ -831,6 +865,7 @@ function generateTextPost(){
         if(ram&&!isApple)post+=`⚡ ${ram} RAM\n`;if(sim)post+=`📶 ${sim}\n`;if(faceid&&faceid!=='N/A')post+=`🔐 Face ID : ${faceid}\n`;
         if(screen)post+=`🖥️ Écran ${screen}\n`;if(warranty)post+=`${warranty==='Sans garantie'?'⚠️':'🛡️'} ${warranty}\n`;
         if(accessories.length)post+=`\n🎁 Avec : ${accessories.join(', ')}\n`;
+        if(notes)post+=`\n📋 ${notes}\n`;
         post+=`\n📍 Viens le récupérer !\n`;if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
         post+=`\n⏰ Quantité LIMITÉE !`;
     }else if(template==='premium'){
@@ -844,6 +879,7 @@ function generateTextPost(){
         post+=`\n═══════════════════\n`;
         if(hasPromo)post+=`💎 ${fmtPrice(oldPrice)} DH ➜ ${fmtPrice(price)} DH\n`;else post+=`💎 ${fmtPrice(price)} DH\n`;
         post+=`═══════════════════\n\n`;if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
+        if(notes)post+=`\n📋 ${notes}\n`;
         post+=`\n✨ La qualité, ça se voit.`;
     }else if(template==='urgent'){
         post=`⚡⚡⚡ VENTE FLASH ⚡⚡⚡\n\n📱 ${fullName.toUpperCase()}\n\n`;
@@ -854,7 +890,8 @@ function generateTextPost(){
         if(accessories.length)post+=`🎁 + ${accessories.join(' + ')}\n\n`;
         if(hasPromo)post+=`💰 ${fmtPrice(oldPrice)} ➜ ${fmtPrice(price)} DH\n\n`;else post+=`💰 ${fmtPrice(price)} DH\n\n`;
         if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`📞 ${fmtPhone(phone)}\n`;
-        post+=`\n🏃 FONCE AVANT QU'IL PARTE ! 🏃`;
+        if(notes)post+=`📋 ${notes}\n\n`;
+        post+=`🏃 FONCE AVANT QU'IL PARTE ! 🏃`;
     }else{
         post=`${phoneName}${storage?' — '+storage:''}\n\n`;let lines=[];
         if(condition)lines.push(`• ${condition}`);if(battery)lines.push(`• Batterie ${battery==='79-'?'< 80':battery}%`);
@@ -863,6 +900,7 @@ function generateTextPost(){
         if(faceid&&faceid!=='N/A')lines.push(`• Face ID : ${faceid}`);if(screen)lines.push(`• Écran : ${screen}`);
         if(warranty)lines.push(`• ${warranty}`);if(lines.length)post+=lines.join('\n')+'\n';
         if(accessories.length)post+=`• Avec ${accessories.join(', ')}\n`;
+        if(notes)post+=`\n${notes}\n`;
         post+=`\nPrix : ${fmtPrice(price)} DH`;if(hasPromo)post+=` (au lieu de ${fmtPrice(oldPrice)} DH)`;
         post+='\n\n';if(shop)post+=`${SHOP_INFO[shop]}\n`;if(phone)post+=`${fmtPhone(phone)}\n`;
     }
@@ -1159,7 +1197,7 @@ $('btnGenerate').addEventListener('click',function(){
     if(!hasPhoto){showToast('⚠️ Ajoute une photo pour le format image');return;}
 
     const condition=$('condition').value;
-    const check=checkCoherence({brand,model,storage,color:$('color').value,battery:$('battery').value,condition,version:$('version').value,sim:$('sim').value,unlock:$('unlock').value,faceid:$('faceid').value,screen:$('screen').value,warranty:$('warranty').value,icloud:$('icloud').value,price,oldPrice,hasPromo,hasPhoto,shop:$('shop').value,phone:$('phone').value,accessories:[...document.querySelectorAll('#accessories input:checked')].map(c=>c.value),ram:$('ram').value});
+    const check=checkCoherence({brand,model,storage,color:$('color').value,battery:$('battery').value,condition,version:$('version').value,sim:$('sim').value,unlock:$('unlock').value,faceid:$('faceid').value,screen:$('screen').value,warranty:$('warranty').value,icloud:$('icloud').value,price,oldPrice,hasPromo,hasPhoto,photoW,photoH,photoVerified:$('photoVerified').checked,shop:$('shop').value,phone:$('phone').value,accessories:[...document.querySelectorAll('#accessories input:checked')].map(c=>c.value),ram:$('ram').value});
     renderReliability(check);
 
     const isApple=brand==='Apple';

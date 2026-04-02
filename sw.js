@@ -1,4 +1,4 @@
-const CACHE = 'postgen-v5';
+const CACHE = 'postgen-v6';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
