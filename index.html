@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
     <title>📱 Corner Mobile — Générateur de Posts</title>
     <style>
         :root {
@@ -630,29 +631,88 @@ function getStorageOptions(brand,model){
 
 function getColorOptions(brand,model){
     if(brand==='Apple'){
-        if(/17 Pro/.test(model)) return ['Titane Noir','Titane Blanc','Titane Sable','Titane Vert'];
-        if(/17 Air/.test(model)) return ['Noir','Bleu','Vert','Lumière Stellaire'];
-        if(/17(?! )/.test(model)&&!/Pro|Air/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rose'];
+        // iPhone 17 series (confirmed 2025)
+        if(/17 Pro/.test(model)) return ['Cosmic Orange','Deep Blue','Silver'];
+        if(/17 Air/.test(model)) return ['Space Black','Cloud White','Light Gold','Sky Blue'];
+        if(/17(?! )/.test(model)&&!/Pro|Air/.test(model)) return ['Lavender','Sage','Mist Blue','White','Black'];
+        // iPhone 16 series
         if(/16 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Désert'];
-        if(/15 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Bleu'];
         if(/16e/.test(model)) return ['Noir','Blanc','Bleu'];
-        if(/16/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rose'];
+        if(/16/.test(model)) return ['Noir','Blanc','Outremer','Sarcelle','Rose'];
+        // iPhone 15 series
+        if(/15 Pro/.test(model)) return ['Titane Naturel','Titane Noir','Titane Blanc','Titane Bleu'];
         if(/15/.test(model)) return ['Noir','Bleu','Vert','Jaune','Rose'];
+        // iPhone 14 series
         if(/14 Pro/.test(model)) return ['Noir Sidéral','Argent','Or','Violet Intense'];
         if(/14/.test(model)) return ['Minuit','Lumière Stellaire','Bleu','Violet','Rouge','Jaune'];
+        // iPhone 13 series
         if(/13 Pro/.test(model)) return ['Graphite','Or','Argent','Bleu Alpin','Vert Alpin'];
         if(/13/.test(model)) return ['Minuit','Lumière Stellaire','Bleu','Rose','Rouge','Vert'];
+        // iPhone 12 series
         if(/12 Pro/.test(model)) return ['Graphite','Or','Argent','Bleu Pacifique'];
         if(/12/.test(model)) return ['Noir','Blanc','Bleu','Vert','Rouge','Violet'];
-        return ['Noir','Blanc','Bleu','Rouge','Or','Argent','Rose'];
+        // iPhone 11 series
+        if(/11 Pro/.test(model)) return ['Vert Nuit','Gris Sidéral','Argent','Or'];
+        if(/11/.test(model)) return ['Noir','Blanc','Vert','Jaune','Violet','Rouge'];
+        // iPhone SE
+        if(/SE \(2022\)/.test(model)) return ['Minuit','Lumière Stellaire','Rouge'];
+        if(/SE \(2020\)/.test(model)) return ['Noir','Blanc','Rouge'];
+        // iPhone X series
+        if(/XS/.test(model)) return ['Or','Argent','Gris Sidéral'];
+        if(/XR/.test(model)) return ['Noir','Blanc','Bleu','Jaune','Corail','Rouge'];
+        if(/^iPhone X$/.test(model)||model==='iPhone X') return ['Argent','Gris Sidéral'];
+        // iPhone 8/7
+        if(/8/.test(model)) return ['Or','Argent','Gris Sidéral','Rouge'];
+        if(/7/.test(model)) return ['Noir','Noir de Jais','Or','Argent','Or Rose','Rouge'];
+        return ['Noir','Blanc','Or','Argent'];
     }
     if(brand==='Samsung'){
-        if(/S25 Ultra/.test(model)) return ['Titanium Black','Titanium Gray','Titanium Blue','Titanium Silver'];
+        // S25 series
+        if(/S25 Ultra/.test(model)) return ['Titanium Silverblue','Titanium Gray','Titanium Black','Titanium Whitesilver'];
         if(/S25/.test(model)) return ['Navy','Icy Blue','Silver Shadow','Mint'];
+        // S24 series
         if(/S24 Ultra/.test(model)) return ['Titanium Black','Titanium Gray','Titanium Violet','Titanium Yellow'];
+        if(/S24 FE/.test(model)) return ['Bleu','Graphite','Gris','Mint','Jaune'];
         if(/S24/.test(model)) return ['Onyx Black','Marble Gray','Cobalt Violet','Amber Yellow'];
-        if(/Fold|Flip/.test(model)) return ['Noir','Bleu','Cream','Gris','Lavande'];
-        return ['Noir','Blanc','Bleu','Violet','Vert','Cream'];
+        // S23 series
+        if(/S23 Ultra/.test(model)) return ['Phantom Black','Cream','Vert','Lavande'];
+        if(/S23 FE/.test(model)) return ['Graphite','Cream','Violet','Mint','Tangerine'];
+        if(/S23/.test(model)) return ['Phantom Black','Cream','Vert','Lavande'];
+        // S22 series
+        if(/S22 Ultra/.test(model)) return ['Phantom Black','Phantom White','Vert','Burgundy'];
+        if(/S22/.test(model)) return ['Phantom Black','Phantom White','Vert','Or Rose'];
+        // S21 series
+        if(/S21 Ultra/.test(model)) return ['Phantom Black','Phantom Silver','Phantom Titanium'];
+        if(/S21 FE/.test(model)) return ['Graphite','White','Lavande','Olive'];
+        if(/S21/.test(model)) return ['Phantom Gray','Phantom White','Phantom Violet','Phantom Pink'];
+        // Fold/Flip 6
+        if(/Fold 6/.test(model)) return ['Silver Shadow','Navy','Pink','Noir'];
+        if(/Flip 6/.test(model)) return ['Silver Shadow','Jaune','Bleu','Mint'];
+        // Fold/Flip 5
+        if(/Fold 5/.test(model)) return ['Icy Blue','Phantom Black','Cream'];
+        if(/Flip 5/.test(model)) return ['Mint','Graphite','Cream','Lavande','Gris'];
+        // Fold/Flip 4
+        if(/Fold 4/.test(model)) return ['Phantom Black','Graygreen','Beige'];
+        if(/Flip 4/.test(model)) return ['Bora Purple','Graphite','Pink Gold','Bleu'];
+        // Note
+        if(/Note 20 Ultra/.test(model)) return ['Mystic Bronze','Mystic Black','Mystic White'];
+        if(/Note 20/.test(model)) return ['Mystic Bronze','Mystic Green','Mystic Gray'];
+        if(/Note 10/.test(model)) return ['Aura Glow','Aura Black','Aura White'];
+        // A series
+        if(/A56/.test(model)) return ['Navy','Iceblue','Graphite','Lilac'];
+        if(/A55/.test(model)) return ['Iceblue','Lilac','Lemon','Navy'];
+        if(/A54/.test(model)) return ['Awesome Graphite','Awesome Violet','Awesome Lime','Awesome White'];
+        if(/A53/.test(model)) return ['Awesome Black','Awesome White','Awesome Blue','Awesome Peach'];
+        if(/A36/.test(model)) return ['Noir','Bleu Clair','Lavande','Vert'];
+        if(/A35/.test(model)) return ['Awesome Iceblue','Awesome Lilac','Awesome Navy','Awesome Lemon'];
+        if(/A25/.test(model)) return ['Bleu','Noir','Jaune'];
+        if(/A16/.test(model)) return ['Noir','Bleu','Vert Clair'];
+        if(/A15/.test(model)) return ['Noir','Bleu','Bleu Clair','Jaune'];
+        if(/A05/.test(model)) return ['Noir','Argent','Bleu Clair'];
+        // M series
+        if(/M35/.test(model)) return ['Noir','Bleu','Gris'];
+        if(/M15/.test(model)) return ['Noir','Bleu','Vert'];
+        return ['Noir','Blanc','Bleu','Violet','Vert'];
     }
     if(brand==='Huawei') return ['Noir','Blanc','Bleu','Vert','Or','Violet'];
     if(brand==='Xiaomi') return ['Noir','Blanc','Bleu','Vert','Violet','Argent'];
@@ -1008,7 +1068,7 @@ function shopLineHTML(d,color){
 function tplPostGradient(d,photo){
     const W=1080,H=1350;
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
-        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;width:100%;height:100%;">
         <div style="position:absolute;top:0;left:0;right:0;height:320px;background:linear-gradient(to bottom,rgba(0,0,0,0.85),transparent);padding:40px 44px;">
             <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:52px;color:#fff;line-height:1.15;text-shadow:0 2px 20px rgba(0,0,0,0.5);">${esc(d.fullName.toUpperCase())}</div>
             ${d.shop?`<div style="font-family:'Inter',sans-serif;font-weight:500;font-size:22px;color:rgba(255,255,255,0.6);margin-top:10px;">Corner Mobile • ${SHOP_SHORT[d.shop]||''}</div>`:''}
@@ -1030,7 +1090,7 @@ function tplPostCard(d,photo){
             <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:46px;color:#fff;line-height:1.15;">${esc(d.fullName.toUpperCase())}</div>
         </div>
         <div style="margin:0 44px;border-radius:20px;overflow:hidden;height:680px;border:2px solid rgba(42,168,220,0.15);">
-            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;width:100%;height:100%;">
         </div>
         <div style="padding:22px 44px 0;">
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">${pillsHTML(getSpecsList(d))}</div>
@@ -1048,7 +1108,7 @@ function tplPostMinimal(d,photo){
     const specs=getSpecsList(d).slice(0,4).join('  •  ');
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#fff;font-family:'Inter',sans-serif;">
         <div style="margin:${b}px;height:${H-260}px;border-radius:6px;overflow:hidden;">
-            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;width:100%;height:100%;">
         </div>
         <div style="padding:12px ${b}px 0;display:flex;justify-content:space-between;align-items:flex-start;">
             <div style="flex:1;min-width:0;padding-right:20px;">
@@ -1067,7 +1127,7 @@ function tplPostMinimal(d,photo){
 function tplStoryFull(d,photo){
     const W=1080,H=1920;
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
-        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;width:100%;height:100%;">
         <div style="position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);display:flex;align-items:center;justify-content:center;padding-top:20px;">
             ${d.shop?`<span style="font-family:'Inter',sans-serif;font-weight:600;font-size:26px;color:rgba(255,255,255,0.7);">Corner Mobile • ${SHOP_SHORT[d.shop]||''}</span>`:''}
         </div>
@@ -1086,7 +1146,7 @@ function tplStorySplit(d,photo){
     const specs=getSpecsList(d);
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#080c0f;font-family:'Inter',sans-serif;">
         <div style="height:${split}px;overflow:hidden;">
-            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+            <img src="${photo}" style="width:100%;height:100%;object-fit:cover;width:100%;height:100%;">
         </div>
         <div style="height:5px;background:linear-gradient(90deg,#2AA8DC,#5BBF3E);"></div>
         <div style="padding:40px 50px;">
@@ -1106,7 +1166,7 @@ function tplStorySplit(d,photo){
 function tplStoryBold(d,photo){
     const W=1080,H=1920;
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:#000;">
-        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.4;">
+        <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;width:100%;height:100%;opacity:0.4;">
         <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;">
             <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:30px;color:rgba(255,255,255,0.6);letter-spacing:4px;margin-bottom:12px;">${(d.brand==='Apple'?'IPHONE':d.brand.toUpperCase())}</div>
             <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:74px;color:#fff;text-align:center;line-height:1.1;margin-bottom:12px;text-shadow:0 4px 40px rgba(0,0,0,0.5);">${esc(d.model.toUpperCase())}</div>
@@ -1122,19 +1182,17 @@ function tplStoryBold(d,photo){
 }
 
 // ===== CAPTURE ENGINE =====
-let _htmlToImage=null;
-async function getLib(){
-    if(!_htmlToImage)_htmlToImage=await import('https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/+esm');
-    return _htmlToImage;
-}
+// html-to-image loaded via <script> tag — available as window.htmlToImage
 
 async function generateImage(d){
     if(!currentPhotoFile){showToast('⚠️ Ajoute une photo');return;}
-    showToast('⏳ Génération en cours...');
+    const btn=$('btnGenerate');
+    btn.disabled=true;btn.style.opacity='0.5';
+    showToast('⏳ Génération en cours...',10000);
 
     // 1. Get resized photo as dataURL
     const photo=await getPhotoDataURL();
-    if(!photo){showToast('⚠️ Erreur lecture photo — réessaye');return;}
+    if(!photo){showToast('⚠️ Erreur lecture photo — réessaye');btn.disabled=false;btn.style.opacity='';return;}
 
     // 2. Wait for Google Fonts to be ready
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
@@ -1171,16 +1229,21 @@ async function generateImage(d){
         console.error('Image load error:',imgErr);
         container.innerHTML='';
         showToast('⚠️ Erreur chargement photo — réessaye');
+        btn.disabled=false;btn.style.opacity='';
         return;
     }
 
     // 6. Capture with html-to-image
     try{
-        const lib=await getLib();
-        const dataUrl=await lib.toJpeg(el,{quality:0.92,width:W,height:H,pixelRatio:1,cacheBust:true});
+        if(!window.htmlToImage||!window.htmlToImage.toJpeg){showToast('⚠️ Librairie pas encore chargée — réessaye');container.innerHTML='';btn.disabled=false;btn.style.opacity='';return;}
+        const dataUrl=await window.htmlToImage.toJpeg(el,{quality:0.92,width:W,height:H,pixelRatio:1,cacheBust:true,
+            // Inline font CSS to avoid cross-origin font fetch issues
+            fontEmbedCSS:'@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap");'
+        });
         if(!dataUrl||!dataUrl.startsWith('data:')){
             showToast('⚠️ Erreur génération — réessaye');
             container.innerHTML='';
+            btn.disabled=false;btn.style.opacity='';
             return;
         }
         $('imgResult').src=dataUrl;
@@ -1188,9 +1251,10 @@ async function generateImage(d){
         showToast('✅ Image générée !');
     }catch(e){
         console.error('html-to-image error:',e);
-        showToast('⚠️ Erreur — réessaye');
+        showToast('⚠️ Erreur génération — réessaye');
     }
     container.innerHTML='';
+    btn.disabled=false;btn.style.opacity='';
 }
 
 // =====================================================================
@@ -1205,7 +1269,7 @@ document.querySelectorAll('.format-tab').forEach(tab=>{
         this.classList.add('active');currentFormat=this.dataset.format;
         const ls=$('layoutSelector'),ss=$('styleSection');
         if(currentFormat==='text'){ls.classList.remove('visible');ss.style.display='';}
-        else{ls.classList.add('visible');ss.style.display='none';renderLayoutOptions();getLib().catch(()=>{});}
+        else{ls.classList.add('visible');ss.style.display='none';renderLayoutOptions();}
     });
 });
 
@@ -1313,7 +1377,8 @@ function doCopy(text,btn){
     else fallbackCopy(text,ok);
 }
 function fallbackCopy(text,cb){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0;left:-9999px';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');if(cb)cb();}catch(e){showToast('⚠️ Sélectionne manuellement');}document.body.removeChild(ta);}
-function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+let _toastTimer;
+function showToast(msg,dur){clearTimeout(_toastTimer);const t=$('toast');t.textContent=msg;t.classList.add('show');_toastTimer=setTimeout(()=>t.classList.remove('show'),dur||2500);}
 
 $('btnCopy').addEventListener('click',()=>doCopy($('outputText').textContent,$('btnCopy')));
 $('btnCopyH').addEventListener('click',()=>doCopy($('hashtagsBox').textContent));
