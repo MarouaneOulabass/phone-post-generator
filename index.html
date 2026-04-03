@@ -2091,15 +2091,125 @@ ar:`⚡ بيع فلاش ⚡
 📞 06 03 16 93 98
 
 🏃 سارع !`},
+
+// ===== STORIES (type:'story') =====
+{type:'story',brand:'Apple',model:'iPhone 16 Pro Max',storage:'256GB',price:'15 500',condition:'Excellent',battery:'96%',specs:'Titane Noir • Europe • 96%',
+gradient:'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)'},
+{type:'story',brand:'Apple',model:'iPhone 15 Pro',storage:'256GB',price:'10 500',condition:'Très bon',battery:'91%',specs:'Titane Bleu • Europe • 91%',
+gradient:'linear-gradient(135deg,#0d1b2a 0%,#1b2838 50%,#1a3a5c 100%)'},
+{type:'story',brand:'Apple',model:'iPhone 14',storage:'128GB',price:'6 000',condition:'Excellent',battery:'90%',specs:'Bleu • Global • 90%',
+gradient:'linear-gradient(135deg,#1a1a2e 0%,#2d1b69 50%,#11001c 100%)'},
+{type:'story',brand:'Apple',model:'iPhone 13',storage:'128GB',price:'5 000',condition:'Très bon',battery:'88%',specs:'Rose • Global • 88%',
+gradient:'linear-gradient(135deg,#2a1a2e 0%,#3d1b4e 50%,#1c0028 100%)'},
+{type:'story',brand:'Apple',model:'iPhone 11',storage:'64GB',price:'2 800',condition:'Bon',battery:'82%',specs:'Noir • Global • 82%',
+gradient:'linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 50%,#111 100%)'},
+{type:'story',brand:'Samsung',model:'Galaxy S25 Ultra',storage:'256GB',price:'14 000',condition:'Comme neuf',battery:'98%',specs:'Titanium Black • Global • 98%',
+gradient:'linear-gradient(135deg,#0f0f23 0%,#1a1a3e 50%,#0a1628 100%)'},
+{type:'story',brand:'Samsung',model:'Galaxy S24 Ultra',storage:'256GB',price:'11 000',condition:'Excellent',battery:'94%',specs:'Titanium Gray • Europe • 94%',
+gradient:'linear-gradient(135deg,#0f1520 0%,#1a2535 50%,#0a1a2a 100%)'},
+{type:'story',brand:'Samsung',model:'Galaxy A55',storage:'128GB',price:'3 200',condition:'Très bon',battery:'90%',specs:'Iceblue • Double SIM • 90%',
+gradient:'linear-gradient(135deg,#0a1a2a 0%,#153050 50%,#0a2040 100%)'},
+{type:'story',brand:'Xiaomi',model:'Redmi Note 14 Pro+',storage:'256GB',price:'3 200',condition:'Comme neuf',battery:'97%',specs:'Noir • Global • 200MP • 97%',
+gradient:'linear-gradient(135deg,#1a0f0f 0%,#2a1515 50%,#3a1a0a 100%)'},
+{type:'story',brand:'Xiaomi',model:'POCO X6 Pro',storage:'256GB',price:'2 800',condition:'Comme neuf',battery:'95%',specs:'Noir • Global • Gaming • 95%',
+gradient:'linear-gradient(135deg,#1a1a0a 0%,#2a2a15 50%,#3a3a0a 100%)'},
 ];
 
-let libFilter='all';
+let libFilter='all',libType='all';
+
+// Story template for library (gradient background, no photo needed)
+function tplLibStory(p){
+    const W=1080,H=1920;
+    const name=`${p.brand==='Apple'?'':p.brand+' '}${p.model}`;
+    const full=`${name}${p.storage?' '+p.storage:''}`;
+    const specsList=p.specs.split(' • ');
+    const condLabels={fr:{
+        'Comme neuf':'Comme neuf','Excellent':'Excellent','Très bon':'Très bon','Bon':'Bon','Neuf':'Neuf'
+    },ar:{
+        'Comme neuf':'كالجديد','Excellent':'ممتاز','Très bon':'جيد جداً','Bon':'جيد','Neuf':'جديد'
+    }};
+    const condText=(condLabels[currentLang]||condLabels.fr)[p.condition]||p.condition;
+    const priceLabel=currentLang==='ar'?'درهم':'DH';
+    const shopText=currentLang==='ar'?'كورنر موبايل — الرباط':'Corner Mobile — Rabat';
+    return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;background:${p.gradient};font-family:'Inter',sans-serif;">
+        <!-- Decorative circles -->
+        <div style="position:absolute;top:-200px;right:-200px;width:500px;height:500px;border-radius:50%;background:rgba(42,168,220,0.08);"></div>
+        <div style="position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;border-radius:50%;background:rgba(91,191,62,0.06);"></div>
+        <!-- Top bar -->
+        <div style="padding:60px 50px 0;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:600;font-size:24px;color:rgba(255,255,255,0.5);letter-spacing:2px;">CORNER MOBILE</div>
+            <div style="font-weight:500;font-size:22px;color:rgba(255,255,255,0.35);">📍 ${esc(shopText)}</div>
+        </div>
+        <!-- Center content -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:90%;padding:0 20px;">
+            <div style="font-weight:600;font-size:28px;color:rgba(255,255,255,0.5);letter-spacing:4px;margin-bottom:16px;">${esc((p.brand==='Apple'?'IPHONE':p.brand).toUpperCase())}</div>
+            <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:72px;color:#fff;line-height:1.1;margin-bottom:12px;text-shadow:0 4px 40px rgba(0,0,0,0.3);">${esc(p.model.toUpperCase())}</div>
+            ${p.storage?`<div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:36px;color:rgba(255,255,255,0.7);margin-bottom:40px;">${p.storage}</div>`:'<div style="margin-bottom:40px;"></div>'}
+            <div style="display:inline-flex;flex-direction:column;align-items:center;">
+                <div style="background:linear-gradient(135deg,#2AA8DC,#5BBF3E);padding:14px 36px;border-radius:16px;display:inline-block;">
+                    <span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:52px;color:#fff;letter-spacing:-1px;">${p.price} ${priceLabel}</span>
+                </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:36px;">
+                <span style="background:rgba(0,0,0,0.45);padding:10px 20px;border-radius:22px;font-weight:600;font-size:24px;color:#fff;">${esc(condText)}</span>
+                ${specsList.map(s=>`<span style="background:rgba(0,0,0,0.45);padding:10px 20px;border-radius:22px;font-weight:600;font-size:24px;color:#fff;">${esc(s)}</span>`).join('')}
+            </div>
+        </div>
+        <!-- Bottom -->
+        <div style="position:absolute;bottom:50px;left:0;right:0;text-align:center;">
+            <div style="font-weight:500;font-size:26px;color:rgba(255,255,255,0.4);">📞 06 03 16 93 98</div>
+        </div>
+        <div style="position:absolute;bottom:20px;right:24px;">
+            <span style="font-weight:600;font-size:20px;color:rgba(42,168,220,0.3);letter-spacing:2px;background:rgba(0,0,0,0.12);padding:6px 12px;border-radius:6px;">CORNER MOBILE</span>
+        </div>
+    </div>`;
+}
+
+async function genLibStory(idx){
+    const p=LIBRARY[idx];if(!p)return;
+    showSpinner(currentLang==='ar'?'جاري توليد الستوري...':'Génération de la story...');
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const container=$('imgRender');
+    container.innerHTML=tplLibStory(p);
+    const el=container.firstElementChild;
+    // Small delay for rendering
+    await new Promise(r=>setTimeout(r,200));
+    try{
+        if(!window.htmlToImage||!window.htmlToImage.toJpeg){hideSpinner();showToast('⚠️ Librairie pas chargée');container.innerHTML='';return;}
+        const dataUrl=await window.htmlToImage.toJpeg(el,{quality:0.92,width:1080,height:1920,pixelRatio:1,
+            fontEmbedCSS:'@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap");'
+        });
+        container.innerHTML='';
+        if(!dataUrl||!dataUrl.startsWith('data:')){hideSpinner();showToast('⚠️ Erreur');return;}
+        // Download directly
+        const a=document.createElement('a');a.href=dataUrl;
+        a.download=`corner-mobile-story-${p.model.replace(/\s/g,'-')}.jpg`;a.click();
+        hideSpinner();showToast('✅ Story téléchargée !');
+    }catch(e){
+        console.error(e);container.innerHTML='';hideSpinner();showToast('⚠️ Erreur — réessaye');
+    }
+}
 
 function renderLibrary(){
     const filters=$('libFilters');
     const brands=['all',...new Set(LIBRARY.map(p=>p.brand))];
+    const types=[{id:'all',fr:'Tous',ar:'الكل'},{id:'post',fr:'📝 Posts',ar:'📝 منشورات'},{id:'story',fr:'📱 Stories',ar:'📱 ستوريز'}];
     const filterLabels={all:{fr:'Tous',ar:'الكل'},Apple:{fr:'Apple',ar:'Apple'},Samsung:{fr:'Samsung',ar:'Samsung'},Xiaomi:{fr:'Xiaomi',ar:'Xiaomi'}};
     filters.innerHTML='';
+    // Type filters
+    types.forEach(t=>{
+        const btn=document.createElement('div');
+        btn.className='lib-filter'+(t.id===libType?' active':'');
+        btn.textContent=t[currentLang];
+        btn.onclick=()=>{libType=t.id;renderLibrary();};
+        btn.style.borderColor=t.id===libType?'var(--green)':'';
+        btn.style.background=t.id===libType?'var(--green)':'';
+        btn.style.color=t.id===libType?'#fff':'';
+        filters.appendChild(btn);
+    });
+    // Separator
+    const sep=document.createElement('div');sep.style.cssText='width:1px;background:var(--card-border);margin:0 2px;flex-shrink:0;align-self:stretch;';filters.appendChild(sep);
+    // Brand filters
     brands.forEach(b=>{
         const btn=document.createElement('div');
         btn.className='lib-filter'+(b===libFilter?' active':'');
@@ -2108,21 +2218,48 @@ function renderLibrary(){
         filters.appendChild(btn);
     });
     const cards=$('libCards');cards.innerHTML='';
-    const filtered=libFilter==='all'?LIBRARY:LIBRARY.filter(p=>p.brand===libFilter);
+    let filtered=LIBRARY;
+    if(libType!=='all')filtered=filtered.filter(p=>(p.type||'post')===libType);
+    if(libFilter!=='all')filtered=filtered.filter(p=>p.brand===libFilter);
+
     filtered.forEach((p,i)=>{
-        const text=p[currentLang]||p.fr;
+        const realIdx=LIBRARY.indexOf(p);
+        const isStory=(p.type==='story');
         const card=document.createElement('div');card.className='lib-card';
-        card.innerHTML=`
-            <div class="lib-card-header">
-                <div class="lib-card-title">${esc(p.brand+' '+p.model)}</div>
-                <div class="lib-card-price">${p.price} DH</div>
-            </div>
-            <div class="lib-card-specs">${esc(p.specs)}</div>
-            <div class="lib-card-text" id="libText${i}">${esc(text)}</div>
-            <div class="lib-card-actions">
-                <button class="lib-btn lib-btn-copy" onclick="doCopy(document.getElementById('libText${i}').textContent)">${currentLang==='ar'?'📋 نسخ':'📋 Copier'}</button>
-                <button class="lib-btn lib-btn-expand" onclick="this.parentElement.previousElementSibling.classList.toggle('expanded');this.textContent=this.parentElement.previousElementSibling.classList.contains('expanded')?'${currentLang==='ar'?'▲ أقل':'▲ Moins'}':'${currentLang==='ar'?'▼ المزيد':'▼ Plus'}'">▼ ${currentLang==='ar'?'المزيد':'Plus'}</button>
-            </div>`;
+
+        if(isStory){
+            // Story card — with gradient preview + generate button
+            card.innerHTML=`
+                <div style="height:120px;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${p.gradient};">
+                    <div style="text-align:center;">
+                        <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:4px;">${esc(p.brand.toUpperCase())}</div>
+                        <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:22px;color:#fff;">${esc(p.model.toUpperCase())}</div>
+                        <div style="font-size:13px;color:var(--green);font-weight:700;margin-top:4px;">${p.price} ${currentLang==='ar'?'درهم':'DH'}</div>
+                    </div>
+                </div>
+                <div class="lib-card-header">
+                    <div class="lib-card-title">📱 ${esc(p.brand+' '+p.model)}</div>
+                    <div class="lib-card-price">${p.price} DH</div>
+                </div>
+                <div class="lib-card-specs">${esc(p.specs)}</div>
+                <div class="lib-card-actions">
+                    <button class="lib-btn lib-btn-copy" style="background:linear-gradient(135deg,var(--blue),var(--green));" onclick="genLibStory(${realIdx})">📱 ${currentLang==='ar'?'توليد + تحميل الستوري':'Générer + Télécharger Story'}</button>
+                </div>`;
+        }else{
+            // Post card — existing behavior
+            const text=p[currentLang]||p.fr;
+            card.innerHTML=`
+                <div class="lib-card-header">
+                    <div class="lib-card-title">${esc(p.brand+' '+p.model)}</div>
+                    <div class="lib-card-price">${p.price} DH</div>
+                </div>
+                <div class="lib-card-specs">${esc(p.specs)}</div>
+                <div class="lib-card-text" id="libText${realIdx}">${esc(text)}</div>
+                <div class="lib-card-actions">
+                    <button class="lib-btn lib-btn-copy" onclick="doCopy(document.getElementById('libText${realIdx}').textContent)">${currentLang==='ar'?'📋 نسخ':'📋 Copier'}</button>
+                    <button class="lib-btn lib-btn-expand" onclick="this.parentElement.previousElementSibling.classList.toggle('expanded');this.textContent=this.parentElement.previousElementSibling.classList.contains('expanded')?'${currentLang==='ar'?'▲ أقل':'▲ Moins'}':'${currentLang==='ar'?'▼ المزيد':'▼ Plus'}'">▼ ${currentLang==='ar'?'المزيد':'Plus'}</button>
+                </div>`;
+        }
         cards.appendChild(card);
     });
 }
