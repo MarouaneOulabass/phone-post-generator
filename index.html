@@ -264,14 +264,102 @@
             border-radius: 12px; color: white; font-size: 14px; font-weight: 600;
             cursor: pointer; margin-top: 8px;
         }
+        /* Spinner overlay */
+        .spinner-wrap {
+            display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+            background:rgba(8,12,15,0.85);z-index:500;
+            align-items:center;justify-content:center;flex-direction:column;gap:16px;
+        }
+        .spinner-wrap.visible { display:flex; }
+        .spinner {
+            width:48px;height:48px;border:4px solid var(--card-border);
+            border-top-color:var(--blue);border-radius:50%;
+            animation:spin 0.8s linear infinite;
+        }
+        @keyframes spin { to{transform:rotate(360deg);} }
+        .spinner-text { font-size:14px;color:var(--text-muted);text-align:center; }
+        /* Language toggle */
+        .lang-toggle {
+            position:absolute;top:calc(10px + var(--safe-top));right:12px;
+            display:flex;gap:4px;
+        }
+        .lang-btn {
+            padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);
+            background:transparent;color:rgba(255,255,255,0.6);font-size:12px;font-weight:600;
+            cursor:pointer;transition:all 0.2s;
+        }
+        .lang-btn.active { background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.5); }
+        /* RTL support */
+        [dir="rtl"] { direction:rtl;text-align:right; }
+        [dir="rtl"] select { background-position:left 14px center;padding-left:36px;padding-right:14px; }
+        [dir="rtl"] .template-tabs,[dir="rtl"] .format-tabs,[dir="rtl"] .layout-options { direction:ltr; }
+        [dir="rtl"] .header { text-align:center; }
+        [dir="rtl"] .lang-toggle { left:12px;right:auto; }
+        /* Library */
+        .lib-section { display:none; }
+        .lib-section.visible { display:block; }
+        .lib-filters {
+            display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;
+            -webkit-overflow-scrolling:touch;
+        }
+        .lib-filter {
+            padding:8px 14px;background:var(--input-bg);border:1px solid var(--card-border);
+            border-radius:20px;color:var(--text-muted);font-size:12px;font-weight:600;
+            cursor:pointer;white-space:nowrap;transition:all 0.2s;
+        }
+        .lib-filter.active { background:var(--blue);border-color:var(--blue);color:#fff; }
+        .lib-card {
+            background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+            padding:16px;margin-bottom:10px;
+        }
+        .lib-card-header {
+            display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+        }
+        .lib-card-title { font-size:16px;font-weight:700;color:#fff; }
+        .lib-card-price { font-size:15px;font-weight:700;color:var(--green); }
+        .lib-card-specs { font-size:12px;color:var(--text-muted);margin-bottom:10px; }
+        .lib-card-text {
+            font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);
+            max-height:120px;overflow:hidden;transition:max-height 0.3s;
+            user-select:all;-webkit-user-select:all;
+        }
+        .lib-card-text.expanded { max-height:none; }
+        .lib-card-actions { display:flex;gap:8px;margin-top:10px; }
+        .lib-btn {
+            flex:1;padding:10px;border:none;border-radius:8px;font-size:13px;
+            font-weight:600;cursor:pointer;text-align:center;
+        }
+        .lib-btn-copy { background:var(--green);color:#fff; }
+        .lib-btn-expand { background:var(--input-bg);color:var(--text-muted);border:1px solid var(--card-border); }
+        /* Nav tabs (Générateur / Bibliothèque) */
+        .nav-tabs {
+            display:flex;gap:0;margin-bottom:16px;background:var(--card);
+            border-radius:12px;padding:4px;border:1px solid var(--card-border);
+        }
+        .nav-tab {
+            flex:1;padding:12px;text-align:center;border-radius:10px;font-size:14px;
+            font-weight:600;cursor:pointer;color:var(--text-muted);transition:all 0.2s;
+        }
+        .nav-tab.active { background:var(--blue);color:#fff; }
     </style>
 </head>
 <body>
+    <div class="spinner-wrap" id="spinner"><div class="spinner"></div><div class="spinner-text" id="spinnerText">Génération en cours...</div></div>
     <div class="header">
+        <div class="lang-toggle">
+            <button class="lang-btn active" data-lang="fr" onclick="setLang('fr')">FR</button>
+            <button class="lang-btn" data-lang="ar" onclick="setLang('ar')">عربي</button>
+        </div>
         <h1>📱 <span class="brand-cm">Corner Mobile</span> — PostGen</h1>
-        <p>Crée ton annonce Instagram en 2 clics</p>
+        <p data-i18n="subtitle">Crée ton annonce Instagram en 2 clics</p>
     </div>
     <div class="container">
+        <!-- NAV: Générateur / Bibliothèque -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-nav="generator" data-i18n="nav_generator">Générateur</div>
+            <div class="nav-tab" data-nav="library" data-i18n="nav_library">Bibliothèque</div>
+        </div>
+        <div id="generatorView">
         <!-- PHOTO -->
         <div class="section">
             <div class="section-title">📸 Photo du produit</div>
@@ -572,7 +660,13 @@
             <button class="btn-download" id="btnDownload">📥 TÉLÉCHARGER L'IMAGE</button>
             <button class="btn-share" id="btnShare">📤 Partager</button>
         </div>
+    </div><!-- /generatorView -->
+    <!-- LIBRARY VIEW -->
+    <div id="libraryView" class="lib-section">
+        <div class="lib-filters" id="libFilters"></div>
+        <div id="libCards"></div>
     </div>
+    </div><!-- /container -->
     <div id="imgRender" style="position:fixed;top:0;left:0;z-index:-1;opacity:0;pointer-events:none;overflow:hidden;"></div>
     <div class="toast" id="toast" role="status" aria-live="polite">✅ Copié !</div>
 
@@ -1188,11 +1282,11 @@ async function generateImage(d){
     if(!currentPhotoFile){showToast('⚠️ Ajoute une photo');return;}
     const btn=$('btnGenerate');
     btn.disabled=true;btn.style.opacity='0.5';
-    showToast('⏳ Génération en cours...',10000);
+    showSpinner(currentLang==='ar'?'جاري التوليد...':'Génération en cours...');
 
     // 1. Get resized photo as dataURL
     const photo=await getPhotoDataURL();
-    if(!photo){showToast('⚠️ Erreur lecture photo — réessaye');btn.disabled=false;btn.style.opacity='';return;}
+    if(!photo){hideSpinner();showToast('⚠️ Erreur lecture photo — réessaye');btn.disabled=false;btn.style.opacity='';return;}
 
     // 2. Wait for Google Fonts to be ready
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
@@ -1228,30 +1322,30 @@ async function generateImage(d){
     }catch(imgErr){
         console.error('Image load error:',imgErr);
         container.innerHTML='';
-        showToast('⚠️ Erreur chargement photo — réessaye');
+        hideSpinner();showToast('⚠️ Erreur chargement photo — réessaye');
         btn.disabled=false;btn.style.opacity='';
         return;
     }
 
     // 6. Capture with html-to-image
     try{
-        if(!window.htmlToImage||!window.htmlToImage.toJpeg){showToast('⚠️ Librairie pas encore chargée — réessaye');container.innerHTML='';btn.disabled=false;btn.style.opacity='';return;}
+        if(!window.htmlToImage||!window.htmlToImage.toJpeg){hideSpinner();showToast('⚠️ Librairie pas encore chargée — réessaye');container.innerHTML='';btn.disabled=false;btn.style.opacity='';return;}
         const dataUrl=await window.htmlToImage.toJpeg(el,{quality:0.92,width:W,height:H,pixelRatio:1,cacheBust:true,
             // Inline font CSS to avoid cross-origin font fetch issues
             fontEmbedCSS:'@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap");'
         });
         if(!dataUrl||!dataUrl.startsWith('data:')){
-            showToast('⚠️ Erreur génération — réessaye');
+            hideSpinner();showToast('⚠️ Erreur génération — réessaye');
             container.innerHTML='';
             btn.disabled=false;btn.style.opacity='';
             return;
         }
         $('imgResult').src=dataUrl;
         $('canvasOutput').classList.add('visible');
-        showToast('✅ Image générée !');
+        hideSpinner();showToast('✅ Image générée !');
     }catch(e){
         console.error('html-to-image error:',e);
-        showToast('⚠️ Erreur génération — réessaye');
+        hideSpinner();showToast('⚠️ Erreur génération — réessaye');
     }
     container.innerHTML='';
     btn.disabled=false;btn.style.opacity='';
@@ -1382,6 +1476,670 @@ function showToast(msg,dur){clearTimeout(_toastTimer);const t=$('toast');t.textC
 
 $('btnCopy').addEventListener('click',()=>doCopy($('outputText').textContent,$('btnCopy')));
 $('btnCopyH').addEventListener('click',()=>doCopy($('hashtagsBox').textContent));
+
+// PWA
+// =====================================================================
+// SPINNER
+// =====================================================================
+function showSpinner(msg){$('spinnerText').textContent=msg||'';$('spinner').classList.add('visible');}
+function hideSpinner(){$('spinner').classList.remove('visible');}
+
+// =====================================================================
+// NAVIGATION (Générateur / Bibliothèque)
+// =====================================================================
+document.querySelectorAll('.nav-tab').forEach(tab=>{
+    tab.addEventListener('click',function(){
+        document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+        this.classList.add('active');
+        const view=this.dataset.nav;
+        $('generatorView').style.display=view==='generator'?'':'none';
+        $('libraryView').classList.toggle('visible',view==='library');
+        if(view==='library')renderLibrary();
+    });
+});
+
+// =====================================================================
+// i18n — FR / Arabe Marocain Soutenu
+// =====================================================================
+let currentLang='fr';
+
+const T={
+    subtitle:{fr:'Crée ton annonce Instagram en 2 clics',ar:'أنشئ إعلانك على إنستغرام بنقرتين'},
+    nav_generator:{fr:'Générateur',ar:'المولّد'},
+    nav_library:{fr:'Bibliothèque',ar:'المكتبة'},
+};
+
+// Labels mapping (for attribute)
+const LABELS={
+    brand:{fr:'Marque',ar:'الماركة'},model:{fr:'Modèle',ar:'الموديل'},
+    storage:{fr:'Stockage',ar:'التخزين'},color:{fr:'Couleur',ar:'اللون'},
+    ram:{fr:'RAM',ar:'الرام'},battery:{fr:'Batterie (%)',ar:'البطارية (%)'},
+    condition:{fr:'État',ar:'الحالة'},version:{fr:'Version',ar:'الإصدار'},
+    sim:{fr:'SIM',ar:'الشريحة'},unlock:{fr:'Déverrouillage',ar:'فك القفل'},
+    faceid:{fr:'Face ID / Biométrie',ar:'Face ID / البصمة'},
+    screen:{fr:'Écran',ar:'الشاشة'},warranty:{fr:'Garantie',ar:'الضمان'},
+    icloud:{fr:'iCloud / FRP',ar:'iCloud / FRP'},
+    price:{fr:'Prix (DH)',ar:'الثمن (درهم)'},oldPrice:{fr:'Ancien prix (DH)',ar:'الثمن القديم (درهم)'},
+    shop:{fr:'Point de vente',ar:'نقطة البيع'},phone:{fr:'Numéro de contact',ar:'رقم الهاتف'},
+    notes:{fr:'Détails libres (optionnel)',ar:'تفاصيل إضافية (اختياري)'},
+    customBrand:{fr:'Nom de la marque',ar:'اسم الماركة'},customModel:{fr:'Nom du modèle',ar:'اسم الموديل'},
+};
+
+const SECTION_TITLES={
+    photo:{fr:'📸 Photo du produit',ar:'📸 صورة المنتج'},
+    info:{fr:'📋 Infos du téléphone',ar:'📋 معلومات الهاتف'},
+    etat:{fr:'🔎 État détaillé',ar:'🔎 الحالة بالتفصيل'},
+    access:{fr:'🎁 Accessoires inclus',ar:'🎁 الإكسسوارات'},
+    notes:{fr:'📝 Notes supplémentaires',ar:'📝 ملاحظات إضافية'},
+    prix:{fr:'💰 Prix',ar:'💰 الثمن'},
+    boutique:{fr:'🏪 Boutique',ar:'🏪 المحل'},
+    format:{fr:'📐 Format de sortie',ar:'📐 شكل المنشور'},
+    style:{fr:'✨ Style du post',ar:'✨ نمط المنشور'},
+};
+
+const BTN_TEXTS={
+    generate:{fr:'✨ GÉNÉRER LE POST',ar:'✨ أنشئ المنشور'},
+    copy:{fr:'📋 COPIER LE TEXTE',ar:'📋 نسخ النص'},
+    copyH:{fr:'📋 Copier les hashtags',ar:'📋 نسخ الهاشتاغات'},
+    download:{fr:'📥 TÉLÉCHARGER L\'IMAGE',ar:'📥 تحميل الصورة'},
+    share:{fr:'📤 Partager',ar:'📤 مشاركة'},
+    photoVerify:{fr:'🔍 Je confirme : la photo correspond au modèle et à la couleur',ar:'🔍 نؤكد: الصورة تطابق الموديل واللون'},
+    promo:{fr:'🏷️ Promotion ?',ar:'🏷️ تخفيض ؟'},
+};
+
+function setLang(lang){
+    currentLang=lang;
+    document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+    document.documentElement.lang=lang;
+    // Toggle buttons
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+    // Translate data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const key=el.dataset.i18n;
+        if(T[key])el.textContent=T[key][lang];
+        if(SECTION_TITLES[key])el.textContent=SECTION_TITLES[key][lang];
+    });
+    // Labels
+    Object.keys(LABELS).forEach(id=>{
+        const lbl=document.querySelector(`label[for="${id}"]`);
+        if(lbl)lbl.textContent=LABELS[id][lang];
+    });
+    // Buttons
+    $('btnGenerate').textContent=BTN_TEXTS.generate[lang];
+    $('btnCopy').textContent=BTN_TEXTS.copy[lang];
+    $('btnCopyH').textContent=BTN_TEXTS.copyH[lang];
+    $('btnDownload').textContent=BTN_TEXTS.download[lang];
+    $('btnShare').textContent=BTN_TEXTS.share[lang];
+    // Photo verify
+    const pvLabel=$('photoVerifyWrap');
+    if(pvLabel){const span=pvLabel.lastChild;if(span&&span.nodeType===3)span.textContent=' '+BTN_TEXTS.photoVerify[lang].replace('🔍 ','');}
+    // Promo
+    const promoSpan=document.querySelector('.promo-toggle span');
+    if(promoSpan)promoSpan.textContent=BTN_TEXTS.promo[lang];
+    // Notes placeholder
+    $('notes').placeholder=lang==='ar'?'مثال: خدش صغير في الظهر، توصيل ممكن في الرباط...':'Ex: Petit rayure sur le dos, livraison possible sur Rabat...';
+    // Re-render library if visible
+    if($('libraryView').classList.contains('visible'))renderLibrary();
+}
+
+// =====================================================================
+// BIBLIOTHÈQUE DE POSTS
+// =====================================================================
+const LIBRARY=[
+{brand:'Apple',model:'iPhone 16 Pro Max',storage:'256GB',price:'15 500',condition:'Excellent',battery:'96%',specs:'Titane Noir • Europe • Face ID OK • Écran original',
+fr:`📱 IPHONE 16 PRO MAX 256GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 État : Excellent
+🔋 Batterie : 96%
+🎨 Couleur : Titane Noir
+🇪🇺 Version : Europe
+🔐 Face ID : Fonctionne
+🖥️ Écran : Original
+🛡️ Garantie magasin
+
+🎁 Boîte d'origine + Chargeur
+
+━━━━━━━━━━━━━━━━━━━━
+💰 Prix : 15 500 DH
+━━━━━━━━━━━━━━━━━━━━
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+💬 DM pour plus d'infos !`,
+ar:`📱 ايفون 16 برو ماكس 256GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 الحالة : ممتازة
+🔋 البطارية : 96%
+🎨 اللون : تيتان أسود
+🇪🇺 النسخة : أوروبية
+🔐 Face ID : يعمل
+🖥️ الشاشة : أصلية
+🛡️ ضمان المحل
+
+🎁 العلبة الأصلية + الشاحن
+
+━━━━━━━━━━━━━━━━━━━━
+💰 الثمن : 15 500 درهم
+━━━━━━━━━━━━━━━━━━━━
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+💬 راسلنا للمزيد من المعلومات !`},
+
+{brand:'Apple',model:'iPhone 15 Pro Max',storage:'256GB',price:'12 500',condition:'Très bon',battery:'93%',specs:'Titane Bleu • Europe • Face ID OK',
+fr:`📱 IPHONE 15 PRO MAX 256GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+👌 État : Très bon
+🔋 Batterie : 93%
+🎨 Couleur : Titane Bleu
+🇪🇺 Version : Europe
+🔐 Face ID : Fonctionne
+
+🎁 Chargeur + Coque
+
+━━━━━━━━━━━━━━━━━━━━
+💰 Prix : 12 500 DH
+━━━━━━━━━━━━━━━━━━━━
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+💬 DM pour plus d'infos !`,
+ar:`📱 ايفون 15 برو ماكس 256GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+👌 الحالة : جيدة جداً
+🔋 البطارية : 93%
+🎨 اللون : تيتان أزرق
+🇪🇺 النسخة : أوروبية
+🔐 Face ID : يعمل
+
+🎁 شاحن + غلاف
+
+━━━━━━━━━━━━━━━━━━━━
+💰 الثمن : 12 500 درهم
+━━━━━━━━━━━━━━━━━━━━
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+💬 راسلنا للمزيد من المعلومات !`},
+
+{brand:'Apple',model:'iPhone 14 Pro',storage:'128GB',price:'8 500',condition:'Excellent',battery:'91%',specs:'Violet Intense • Europe • Face ID OK',
+fr:`🔥 OFFRE DU JOUR 🔥
+
+📱 IPHONE 14 PRO 128GB
+
+🌟 Excellent état
+🔋 Batterie 91%
+🎨 Violet Intense
+🇪🇺 Version Europe
+🔐 Face ID OK
+
+💰 Prix : 8 500 DH
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+⚡ Dépêchez-vous !`,
+ar:`🔥 عرض اليوم 🔥
+
+📱 ايفون 14 برو 128GB
+
+🌟 حالة ممتازة
+🔋 البطارية 91%
+🎨 بنفسجي غامق
+🇪🇺 النسخة أوروبية
+🔐 Face ID يعمل
+
+💰 الثمن : 8 500 درهم
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+⚡ سارعوا !`},
+
+{brand:'Apple',model:'iPhone 13',storage:'128GB',price:'5 000',condition:'Très bon',battery:'88%',specs:'Minuit • Global • Face ID OK',
+fr:`📱 IPHONE 13 128GB
+
+👌 Très bon état
+🔋 Batterie 88%
+🎨 Minuit
+🌍 Version Global
+🔐 Face ID OK
+📶 Double SIM
+
+💰 Prix : 5 000 DH
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+💬 DM pour plus d'infos !`,
+ar:`📱 ايفون 13 — 128GB
+
+👌 حالة جيدة جداً
+🔋 البطارية 88%
+🎨 أسود (Minuit)
+🌍 النسخة عالمية
+🔐 Face ID يعمل
+📶 شريحتين
+
+💰 الثمن : 5 000 درهم
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+💬 راسلنا للمزيد !`},
+
+{brand:'Apple',model:'iPhone 12',storage:'64GB',price:'3 500',condition:'Bon',battery:'85%',specs:'Bleu • Europe',
+fr:`📱 iPhone 12 — 64GB
+
+• Bon état
+• Batterie 85%
+• Bleu
+• Version Europe
+• Face ID OK
+
+Prix : 3 500 DH
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98`,
+ar:`📱 ايفون 12 — 64GB
+
+• حالة جيدة
+• البطارية 85%
+• أزرق
+• النسخة أوروبية
+• Face ID يعمل
+
+الثمن : 3 500 درهم
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98`},
+
+{brand:'Apple',model:'iPhone 11',storage:'64GB',price:'2 800',condition:'Bon',battery:'82%',specs:'Noir • Global • Face ID OK',
+fr:`💥 PRIX CHOC 💥
+
+📱 IPHONE 11 64GB
+
+✅ Bon état
+🔋 Batterie 82%
+🎨 Noir
+🌍 Global
+🔐 Face ID OK
+
+💥 PRIX : 2 800 DH 💥
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+⏰ Quantité limitée !`,
+ar:`💥 ثمن خيالي 💥
+
+📱 ايفون 11 — 64GB
+
+✅ حالة جيدة
+🔋 البطارية 82%
+🎨 أسود
+🌍 النسخة عالمية
+🔐 Face ID يعمل
+
+💥 الثمن : 2 800 درهم 💥
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+⏰ الكمية محدودة !`},
+
+{brand:'Samsung',model:'Galaxy S25 Ultra',storage:'256GB',price:'14 000',condition:'Comme neuf',battery:'98%',specs:'Titanium Black • Global',
+fr:`👑 GALAXY S25 ULTRA 256GB 👑
+═══════════════════
+
+Un bijou de technologie chez Corner Mobile.
+
+▫️ État : Comme neuf
+▫️ Batterie : 98%
+▫️ Couleur : Titanium Black
+▫️ Version : Global
+▫️ S Pen inclus
+
+═══════════════════
+💎 14 000 DH
+═══════════════════
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+✨ La qualité, ça se voit.`,
+ar:`👑 جالاكسي S25 أولترا 256GB 👑
+═══════════════════
+
+تحفة تكنولوجية متوفرة في كورنر موبايل.
+
+▫️ الحالة : كالجديد
+▫️ البطارية : 98%
+▫️ اللون : Titanium Black
+▫️ النسخة : عالمية
+▫️ S Pen متضمن
+
+═══════════════════
+💎 14 000 درهم
+═══════════════════
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+✨ الجودة باينة.`},
+
+{brand:'Samsung',model:'Galaxy S24 Ultra',storage:'256GB',price:'11 000',condition:'Excellent',battery:'94%',specs:'Titanium Gray • Europe • S Pen',
+fr:`📱 GALAXY S24 ULTRA 256GB
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 Excellent état
+🔋 Batterie : 94%
+🎨 Titanium Gray
+🇪🇺 Version Europe
+📶 Double SIM
+✏️ S Pen inclus
+
+🎁 Boîte + Chargeur
+
+━━━━━━━━━━━━━━━━━━━━
+💰 Prix : 11 000 DH
+━━━━━━━━━━━━━━━━━━━━
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+💬 DM pour plus d'infos !`,
+ar:`📱 جالاكسي S24 أولترا 256GB
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 حالة ممتازة
+🔋 البطارية : 94%
+🎨 Titanium Gray
+🇪🇺 النسخة أوروبية
+📶 شريحتين
+✏️ S Pen متضمن
+
+🎁 العلبة + الشاحن
+
+━━━━━━━━━━━━━━━━━━━━
+💰 الثمن : 11 000 درهم
+━━━━━━━━━━━━━━━━━━━━
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+💬 راسلنا للمزيد !`},
+
+{brand:'Samsung',model:'Galaxy A55',storage:'128GB',price:'3 200',condition:'Très bon',battery:'90%',specs:'Iceblue • Double SIM',
+fr:`⚡ VENTE FLASH ⚡
+
+📱 SAMSUNG GALAXY A55 128GB
+
+Très bon | Bat. 90% | Iceblue | Double SIM
+
+💰 3 200 DH
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+🏃 Fonce avant qu'il parte !`,
+ar:`⚡ بيع فلاش ⚡
+
+📱 سامسونج جالاكسي A55 — 128GB
+
+حالة جيدة جداً | البطارية 90% | أزرق | شريحتين
+
+💰 3 200 درهم
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+🏃 سارع قبل ما يمشي !`},
+
+{brand:'Samsung',model:'Galaxy A15',storage:'128GB',price:'1 400',condition:'Bon',battery:'92%',specs:'Noir • Double SIM',
+fr:`📱 Samsung Galaxy A15 — 128GB
+
+• Bon état
+• Batterie 92%
+• Noir
+• Double SIM
+• Débloqué
+
+Prix : 1 400 DH
+
+📍 Corner Mobile — Rabat
+06 03 16 93 98`,
+ar:`📱 سامسونج جالاكسي A15 — 128GB
+
+• حالة جيدة
+• البطارية 92%
+• أسود
+• شريحتين
+• مفتوح لجميع الشبكات
+
+الثمن : 1 400 درهم
+
+📍 كورنر موبايل — الرباط
+06 03 16 93 98`},
+
+{brand:'Xiaomi',model:'Redmi Note 14 Pro+',storage:'256GB',price:'3 200',condition:'Comme neuf',battery:'97%',specs:'Noir • Global • 200MP',
+fr:`🔥 OFFRE DE FOLIE 🔥
+
+📱 XIAOMI REDMI NOTE 14 PRO+ 256GB
+
+✨ Comme neuf
+🔋 Batterie 97%
+🎨 Noir
+🌍 Global
+📸 Caméra 200MP
+
+💥 PRIX CHOC : 3 200 DH 💥
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+⏰ Quantité limitée !`,
+ar:`🔥 عرض مذهل 🔥
+
+📱 شاومي ريدمي نوت 14 برو+ 256GB
+
+✨ كالجديد
+🔋 البطارية 97%
+🎨 أسود
+🌍 النسخة عالمية
+📸 كاميرا 200MP
+
+💥 الثمن : 3 200 درهم فقط 💥
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+⏰ الكمية محدودة !`},
+
+{brand:'Xiaomi',model:'Redmi Note 13 Pro',storage:'128GB',price:'2 200',condition:'Excellent',battery:'93%',specs:'Bleu • Global • 200MP',
+fr:`📱 REDMI NOTE 13 PRO 128GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 Excellent état
+🔋 Batterie : 93%
+🎨 Bleu
+🌍 Version Global
+📸 Caméra 200MP
+
+━━━━━━━━━━━━━━━━━━━━
+💰 Prix : 2 200 DH
+━━━━━━━━━━━━━━━━━━━━
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+💬 DM pour plus d'infos !`,
+ar:`📱 ريدمي نوت 13 برو 128GB 📱
+━━━━━━━━━━━━━━━━━━━━
+
+🌟 حالة ممتازة
+🔋 البطارية : 93%
+🎨 أزرق
+🌍 النسخة عالمية
+📸 كاميرا 200MP
+
+━━━━━━━━━━━━━━━━━━━━
+💰 الثمن : 2 200 درهم
+━━━━━━━━━━━━━━━━━━━━
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+💬 راسلنا !`},
+
+{brand:'Apple',model:'iPhone XR',storage:'64GB',price:'1 800',condition:'Bon',battery:'80%',specs:'Rouge • Global',
+fr:`💥 PETIT PRIX 💥
+
+📱 IPHONE XR 64GB
+
+✅ Bon état
+🔋 Batterie 80%
+🎨 Rouge (PRODUCT)RED
+🌍 Global
+
+💥 SEULEMENT 1 800 DH 💥
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98`,
+ar:`💥 ثمن صغير 💥
+
+📱 ايفون XR — 64GB
+
+✅ حالة جيدة
+🔋 البطارية 80%
+🎨 أحمر (PRODUCT)RED
+🌍 النسخة عالمية
+
+💥 غير 1 800 درهم 💥
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98`},
+
+{brand:'Samsung',model:'Galaxy S23 Ultra',storage:'256GB',price:'9 000',condition:'Excellent',battery:'92%',specs:'Phantom Black • Europe • S Pen',
+fr:`👑 GALAXY S23 ULTRA 256GB 👑
+═══════════════════
+
+🌟 Excellent état
+🔋 Batterie : 92%
+🎨 Phantom Black
+🇪🇺 Version Europe
+✏️ S Pen inclus
+🛡️ Garantie magasin
+
+═══════════════════
+💎 9 000 DH
+═══════════════════
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+✨ La qualité, ça se voit.`,
+ar:`👑 جالاكسي S23 أولترا 256GB 👑
+═══════════════════
+
+🌟 حالة ممتازة
+🔋 البطارية : 92%
+🎨 أسود فانتوم
+🇪🇺 النسخة أوروبية
+✏️ S Pen متضمن
+🛡️ ضمان المحل
+
+═══════════════════
+💎 9 000 درهم
+═══════════════════
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+✨ الجودة باينة.`},
+
+{brand:'Xiaomi',model:'POCO X6 Pro',storage:'256GB',price:'2 800',condition:'Comme neuf',battery:'95%',specs:'Noir • Global • Gaming',
+fr:`⚡ VENTE FLASH ⚡
+
+📱 POCO X6 PRO 256GB
+
+Comme neuf | Bat. 95% | Noir | Global | Gaming Beast
+
+💰 2 800 DH
+
+📍 Corner Mobile — Rabat
+📞 06 03 16 93 98
+
+🏃 Fonce !`,
+ar:`⚡ بيع فلاش ⚡
+
+📱 بوكو X6 برو 256GB
+
+كالجديد | البطارية 95% | أسود | عالمي | وحش الألعاب
+
+💰 2 800 درهم
+
+📍 كورنر موبايل — الرباط
+📞 06 03 16 93 98
+
+🏃 سارع !`},
+];
+
+let libFilter='all';
+
+function renderLibrary(){
+    const filters=$('libFilters');
+    const brands=['all',...new Set(LIBRARY.map(p=>p.brand))];
+    const filterLabels={all:{fr:'Tous',ar:'الكل'},Apple:{fr:'Apple',ar:'Apple'},Samsung:{fr:'Samsung',ar:'Samsung'},Xiaomi:{fr:'Xiaomi',ar:'Xiaomi'}};
+    filters.innerHTML='';
+    brands.forEach(b=>{
+        const btn=document.createElement('div');
+        btn.className='lib-filter'+(b===libFilter?' active':'');
+        btn.textContent=(filterLabels[b]||{fr:b,ar:b})[currentLang]||b;
+        btn.onclick=()=>{libFilter=b;renderLibrary();};
+        filters.appendChild(btn);
+    });
+    const cards=$('libCards');cards.innerHTML='';
+    const filtered=libFilter==='all'?LIBRARY:LIBRARY.filter(p=>p.brand===libFilter);
+    filtered.forEach((p,i)=>{
+        const text=p[currentLang]||p.fr;
+        const card=document.createElement('div');card.className='lib-card';
+        card.innerHTML=`
+            <div class="lib-card-header">
+                <div class="lib-card-title">${esc(p.brand+' '+p.model)}</div>
+                <div class="lib-card-price">${p.price} DH</div>
+            </div>
+            <div class="lib-card-specs">${esc(p.specs)}</div>
+            <div class="lib-card-text" id="libText${i}">${esc(text)}</div>
+            <div class="lib-card-actions">
+                <button class="lib-btn lib-btn-copy" onclick="doCopy(document.getElementById('libText${i}').textContent)">${currentLang==='ar'?'📋 نسخ':'📋 Copier'}</button>
+                <button class="lib-btn lib-btn-expand" onclick="this.parentElement.previousElementSibling.classList.toggle('expanded');this.textContent=this.parentElement.previousElementSibling.classList.contains('expanded')?'${currentLang==='ar'?'▲ أقل':'▲ Moins'}':'${currentLang==='ar'?'▼ المزيد':'▼ Plus'}'">▼ ${currentLang==='ar'?'المزيد':'Plus'}</button>
+            </div>`;
+        cards.appendChild(card);
+    });
+}
+
+// Tag section titles with data-i18n
+document.querySelectorAll('.section-title').forEach(el=>{
+    const text=el.textContent.trim();
+    if(text.includes('Photo'))el.dataset.i18n='photo';
+    else if(text.includes('Infos'))el.dataset.i18n='info';
+    else if(text.includes('État dét'))el.dataset.i18n='etat';
+    else if(text.includes('Accessoires'))el.dataset.i18n='access';
+    else if(text.includes('Notes'))el.dataset.i18n='notes';
+    else if(text.includes('Prix'))el.dataset.i18n='prix';
+    else if(text.includes('Boutique'))el.dataset.i18n='boutique';
+    else if(text.includes('Format'))el.dataset.i18n='format';
+    else if(text.includes('Style'))el.dataset.i18n='style';
+});
 
 // PWA
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
