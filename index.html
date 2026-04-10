@@ -961,7 +961,7 @@ const SHOP_INFO={'M1':'📍 Corner Mobile — CC Aït Baha, Rabat','M2':'📍 Co
 const SHOP_SHORT={'M1':'CC Aït Baha, Rabat','M2':'CC Oued Dahab, Rabat'};
 
 function fmtPhone(n){return n?n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5'):'';}
-function fmtPrice(p){return p.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+function fmtPrice(p){return p.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');}
 
 // =====================================================================
 // TEXT POST GENERATOR (same 5 templates)
@@ -1133,37 +1133,36 @@ function tplPostGradient(d,photo){
     const isNeuf=d.condition==='Neuf';
     const typeLabel=isNeuf?'PRODUIT NEUF 🆕':'OCCASION ✅';
     const typeBg=isNeuf?'#e67e22':'#2AA8DC';
-    const specLines=[];
-    specLines.push(`📱 ${esc(d.fullName)}`);
-    if(d.version)specLines.push(`${d.version==='Europe'?'🇪🇺':'🌍'} Version ${esc(d.version)}${d.sim?' ('+esc(d.sim)+')':''}`);
-    if(d.battery)specLines.push(`🔋 Batterie : ${d.battery==='79-'?'< 80':d.battery}%`);
-    const detailLines=[];
-    if(d.condition&&!isNeuf)detailLines.push(`${d.condition} ✅`);
-    if(d.faceid==='Fonctionne')detailLines.push('Face ID OK ✅');
-    if(d.screen)detailLines.push('Écran '+esc(d.screen));
-    if(d.warranty)detailLines.push(esc(d.warranty));
+    // Un seul bloc unifié — même style pour tous les stickers specs
+    const allLines=[];
+    allLines.push(`📱 ${esc(d.fullName)}`);
+    if(d.version)allLines.push(`${d.version==='Europe'?'🇪🇺':'🌍'} Version ${esc(d.version)}${d.sim?' ('+esc(d.sim)+')':''}`);
+    if(d.battery)allLines.push(`🔋 Batterie : ${d.battery==='79-'?'< 80':d.battery}%`);
+    if(d.color)allLines.push(`🎨 ${esc(d.color)}`);
+    if(d.condition&&!isNeuf)allLines.push(`✅ ${esc(d.condition)}`);
+    if(d.faceid==='Fonctionne')allLines.push('🔐 Face ID OK');
+    if(d.screen)allLines.push('🖥️ Écran '+esc(d.screen));
+    if(d.warranty)allLines.push('🛡️ '+esc(d.warranty));
+    const shopLabel='📍 Corner Mobile — '+(SHOP_SHORT[d.shop]||'Rabat')+(d.phoneNum?' • 📞 '+fmtPhone(d.phoneNum):'');
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;font-family:'Inter',sans-serif;">
         <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
         <!-- Type badge top-left -->
         <div style="position:absolute;top:40px;left:32px;">
             ${sticker(typeLabel,{bg:typeBg,size:26,weight:800,py:12,px:20,radius:14})}
         </div>
-        <!-- Specs stickers top-left below badge -->
-        <div style="position:absolute;top:110px;left:32px;">
-            ${stickerBlock(specLines,{bg:'rgba(0,0,0,0.72)',size:26,weight:600})}
+        <!-- All specs as one unified sticker block -->
+        <div style="position:absolute;top:110px;left:32px;display:flex;flex-direction:column;gap:8px;">
+            ${allLines.map(l=>sticker(l,{bg:'rgba(0,0,0,0.72)',size:26,weight:600})).join('')}
         </div>
-        <!-- Details stickers mid-left -->
-        ${detailLines.length?`<div style="position:absolute;top:${110+specLines.length*56+20}px;left:32px;">
-            ${stickerBlock(detailLines,{bg:'rgba(0,0,0,0.55)',size:24,weight:500,shadow:false})}
-        </div>`:''}
         <!-- Price sticker bottom -->
         <div style="position:absolute;bottom:100px;left:32px;">
-            ${d.hasPromo&&d.oldPrice?sticker(`<span style="text-decoration:line-through;opacity:0.6;font-size:24px;">${fmtPrice(d.oldPrice)} DH</span>  ➜  ${fmtPrice(d.price)} DH 🔥`,{bg:'#27ae60',size:36,weight:800,py:16,px:24,radius:16})
-            :sticker('💰 '+fmtPrice(d.price)+'DH',{bg:'#27ae60',size:40,weight:800,py:16,px:24,radius:16})}
+            ${d.hasPromo&&d.oldPrice
+                ?sticker(`<span style="text-decoration:line-through;opacity:0.6;font-size:24px;">${fmtPrice(d.oldPrice)}&nbsp;DH</span>&nbsp; ➜ &nbsp;${fmtPrice(d.price)}&nbsp;DH 🔥`,{bg:'#27ae60',size:36,weight:800,py:16,px:24,radius:16})
+                :sticker(`💰 ${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:40,weight:800,py:16,px:24,radius:16})}
         </div>
         <!-- Shop sticker bottom-left -->
-        <div style="position:absolute;bottom:36px;left:32px;">
-            ${sticker('📍 Corner Mobile — '+(SHOP_SHORT[d.shop]||'Rabat')+(d.phoneNum?' • 📞 '+fmtPhone(d.phoneNum):''),{bg:'rgba(0,0,0,0.6)',size:20,weight:500,py:8,px:14,radius:10,shadow:false})}
+        <div style="position:absolute;bottom:36px;left:32px;max-width:800px;">
+            ${sticker(shopLabel,{bg:'rgba(0,0,0,0.6)',size:20,weight:500,py:8,px:14,radius:10,shadow:false})}
         </div>
         <!-- Corner Mobile watermark bottom-right -->
         <div style="position:absolute;bottom:40px;right:32px;opacity:0.25;">
@@ -1195,7 +1194,7 @@ function tplPostCard(d,photo){
         </div>
         <!-- Price -->
         <div style="position:absolute;bottom:100px;left:32px;">
-            ${sticker('💰 '+fmtPrice(d.price)+'DH',{bg:'#27ae60',size:42,weight:800,py:16,px:28,radius:16})}
+            ${sticker(`💰 ${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:42,weight:800,py:16,px:28,radius:16})}
         </div>
         <!-- Shop -->
         <div style="position:absolute;bottom:40px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:center;">
@@ -1216,8 +1215,8 @@ function tplPostMinimal(d,photo){
         </div>
         <!-- Price bottom-left big -->
         <div style="position:absolute;bottom:40px;left:32px;">
-            ${d.hasPromo&&d.oldPrice?`<div style="margin-bottom:8px;">${sticker('<s>'+fmtPrice(d.oldPrice)+' DH</s>',{bg:'rgba(0,0,0,0.5)',size:24,weight:500,py:6,px:14,shadow:false})}</div>`:''}
-            ${sticker(fmtPrice(d.price)+' DH',{bg:'#27ae60',size:48,weight:800,py:18,px:30,radius:18})}
+            ${d.hasPromo&&d.oldPrice?`<div style="margin-bottom:8px;">${sticker(`<s>${fmtPrice(d.oldPrice)}&nbsp;DH</s>`,{bg:'rgba(0,0,0,0.5)',size:24,weight:500,py:6,px:14,shadow:false})}</div>`:''}
+            ${sticker(`${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:48,weight:800,py:18,px:30,radius:18})}
         </div>
         <!-- Watermark -->
         <div style="position:absolute;bottom:44px;right:32px;opacity:0.25;font-family:'Montserrat',sans-serif;font-weight:800;font-size:18px;color:#fff;letter-spacing:2px;">CORNER MOBILE</div>
@@ -1232,35 +1231,31 @@ function tplStoryFull(d,photo){
     const isNeuf=d.condition==='Neuf';
     const typeLabel=isNeuf?'PRODUIT NEUF 🆕':'OCCASION ✅';
     const typeBg=isNeuf?'#e67e22':'#2AA8DC';
-    const specLines=[];
-    specLines.push(`📱 ${esc(d.fullName)}`);
-    if(d.version)specLines.push(`${d.version==='Europe'?'🇪🇺':'🌍'} Version ${esc(d.version)}${d.sim?' ('+esc(d.sim)+')':''}`);
-    if(d.battery)specLines.push(`🔋 Batterie : ${d.battery==='79-'?'< 80':d.battery}%`);
-    const detailLines=[];
-    if(d.condition&&!isNeuf)detailLines.push(`${esc(d.condition)} ✅`);
-    if(isNeuf)detailLines.push('Neuf — Jamais utilisé ✨');
-    if(d.faceid==='Fonctionne')detailLines.push('Face ID OK ✅');
-    if(d.screen)detailLines.push('Écran '+esc(d.screen)+' ✅');
-    if(d.warranty)detailLines.push(esc(d.warranty)+' 🛡️');
-    if(d.color)detailLines.push('🎨 '+esc(d.color));
+    // Un seul bloc unifié pour tous les specs
+    const allLines=[];
+    allLines.push(`📱 ${esc(d.fullName)}`);
+    if(d.version)allLines.push(`${d.version==='Europe'?'🇪🇺':'🌍'} Version ${esc(d.version)}${d.sim?' ('+esc(d.sim)+')':''}`);
+    if(d.battery)allLines.push(`🔋 Batterie : ${d.battery==='79-'?'< 80':d.battery}%`);
+    if(d.color)allLines.push(`🎨 ${esc(d.color)}`);
+    if(d.condition&&!isNeuf)allLines.push(`✅ ${esc(d.condition)}`);
+    if(isNeuf)allLines.push('✨ Neuf — Jamais utilisé');
+    if(d.faceid==='Fonctionne')allLines.push('🔐 Face ID OK');
+    if(d.screen)allLines.push('🖥️ Écran '+esc(d.screen));
+    if(d.warranty)allLines.push('🛡️ '+esc(d.warranty));
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;font-family:'Inter',sans-serif;">
         <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
         <!-- Type badge -->
         <div style="position:absolute;top:60px;left:36px;">
             ${sticker(typeLabel,{bg:typeBg,size:30,weight:800,py:14,px:22,radius:14})}
         </div>
-        <!-- Specs -->
-        <div style="position:absolute;top:140px;left:36px;">
-            ${stickerBlock(specLines,{bg:'rgba(0,0,0,0.72)',size:28,weight:600})}
-        </div>
-        <!-- Details mid -->
-        <div style="position:absolute;top:${140+specLines.length*60+24}px;left:36px;">
-            ${stickerBlock(detailLines,{bg:'rgba(0,0,0,0.55)',size:26,weight:500,shadow:false})}
+        <!-- All specs unified block -->
+        <div style="position:absolute;top:140px;left:36px;display:flex;flex-direction:column;gap:8px;">
+            ${allLines.map(l=>sticker(l,{bg:'rgba(0,0,0,0.72)',size:28,weight:600})).join('')}
         </div>
         <!-- Price big -->
         <div style="position:absolute;bottom:180px;left:36px;">
-            ${d.hasPromo&&d.oldPrice?sticker(`<span style="text-decoration:line-through;opacity:0.6;font-size:26px;">${fmtPrice(d.oldPrice)} DH</span>  ➜  ${fmtPrice(d.price)} DH 🔥`,{bg:'#27ae60',size:40,weight:800,py:18,px:28,radius:18})
-            :sticker('💰 '+fmtPrice(d.price)+' DH',{bg:'#27ae60',size:44,weight:800,py:18,px:28,radius:18})}
+            ${d.hasPromo&&d.oldPrice?sticker(`<span style="text-decoration:line-through;opacity:0.6;font-size:26px;">${fmtPrice(d.oldPrice)}&nbsp;DH</span>&nbsp; ➜ &nbsp;${fmtPrice(d.price)}&nbsp;DH 🔥`,{bg:'#27ae60',size:40,weight:800,py:18,px:28,radius:18})
+            :sticker(`💰 ${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:44,weight:800,py:18,px:28,radius:18})}
         </div>
         <!-- Available now -->
         <div style="position:absolute;bottom:110px;left:36px;">
@@ -1296,7 +1291,7 @@ function tplStorySplit(d,photo){
         </div>
         <!-- Price -->
         <div style="position:absolute;bottom:160px;left:36px;">
-            ${sticker('💰 '+fmtPrice(d.price)+' DH',{bg:'#27ae60',size:46,weight:800,py:18,px:28,radius:18})}
+            ${sticker(`💰 ${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:46,weight:800,py:18,px:28,radius:18})}
         </div>
         <!-- Urgency -->
         <div style="position:absolute;bottom:90px;left:36px;">
@@ -1325,8 +1320,8 @@ function tplStoryBold(d,photo){
         <!-- Price HUGE bottom center -->
         <div style="position:absolute;bottom:200px;left:0;right:0;display:flex;justify-content:center;">
             ${d.hasPromo&&d.oldPrice?
-            sticker(`<div style="text-align:center;"><div style="text-decoration:line-through;opacity:0.6;font-size:28px;margin-bottom:4px;">${fmtPrice(d.oldPrice)} DH</div><div style="font-size:56px;">${fmtPrice(d.price)} DH</div></div>`,{bg:'#27ae60',weight:800,py:20,px:36,radius:20})
-            :sticker(fmtPrice(d.price)+' DH',{bg:'#27ae60',size:60,weight:800,py:20,px:40,radius:20})}
+            sticker(`<div style="text-align:center;white-space:nowrap;"><div style="text-decoration:line-through;opacity:0.6;font-size:28px;margin-bottom:4px;">${fmtPrice(d.oldPrice)}&nbsp;DH</div><div style="font-size:56px;">${fmtPrice(d.price)}&nbsp;DH</div></div>`,{bg:'#27ae60',weight:800,py:20,px:36,radius:20})
+            :sticker(`${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:60,weight:800,py:20,px:40,radius:20})}
         </div>
         <!-- Quick specs -->
         <div style="position:absolute;bottom:110px;left:36px;display:flex;gap:8px;flex-wrap:wrap;">
