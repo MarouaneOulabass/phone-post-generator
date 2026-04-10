@@ -1207,21 +1207,50 @@ function tplPostCard(d,photo){
 }
 
 function tplPostMinimal(d,photo){
-    // "Clean" — photo avec juste titre + prix, très épuré
+    // "Clean" — photo plein écran + titre + specs compacts + prix gros — style épuré premium
     const W=1080,H=1350;
+    const isNeuf=d.condition==='Neuf';
+    // 3 specs max en ligne horizontale (badges compacts)
+    const quickSpecs=[];
+    if(d.battery)quickSpecs.push(`🔋 ${d.battery==='79-'?'<80':d.battery}%`);
+    if(d.condition)quickSpecs.push(isNeuf?'🆕 Neuf':'✅ '+esc(d.condition));
+    if(d.version)quickSpecs.push(d.version==='Europe'?'🇪🇺 Europe':'🌍 '+esc(d.version));
+    if(d.warranty&&quickSpecs.length<3)quickSpecs.push('🛡️ '+esc(d.warranty));
+    const shopLabel='📍 Corner Mobile — '+(SHOP_SHORT[d.shop]||'Rabat')+(d.phoneNum?' • 📞 '+fmtPhone(d.phoneNum):'');
+    const typeLabel=isNeuf?'NEUF':'OCCASION';
+    const typeBg=isNeuf?'#e67e22':'#2AA8DC';
     return `<div style="width:${W}px;height:${H}px;position:relative;overflow:hidden;font-family:'Inter',sans-serif;">
         <img src="${photo}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
-        <!-- Model name top -->
-        <div style="position:absolute;top:40px;left:32px;">
-            ${sticker('📱 '+esc(d.fullName.toUpperCase()),{bg:'#2AA8DC',size:32,weight:800,py:14,px:22,radius:14})}
+        <!-- Gradient overlay top for title readability -->
+        <div style="position:absolute;top:0;left:0;right:0;height:200px;background:linear-gradient(to bottom,rgba(0,0,0,0.45) 0%,transparent 100%);"></div>
+        <!-- Gradient overlay bottom for price/specs readability -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:480px;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.3) 60%,transparent 100%);"></div>
+        <!-- Condition badge top-right -->
+        <div style="position:absolute;top:40px;right:32px;">
+            ${sticker(typeLabel,{bg:typeBg,size:22,weight:800,py:10,px:18,radius:10})}
         </div>
+        <!-- Model name top-left -->
+        <div style="position:absolute;top:40px;left:32px;max-width:780px;">
+            ${sticker('📱 '+esc(d.fullName.toUpperCase()),{bg:'rgba(0,0,0,0.55)',size:32,weight:800,py:14,px:22,radius:14,shadow:true})}
+        </div>
+        <!-- Quick specs row above price -->
+        ${quickSpecs.length?`<div style="position:absolute;bottom:180px;left:32px;display:flex;gap:10px;flex-wrap:nowrap;">
+            ${quickSpecs.map(s=>sticker(s,{bg:'rgba(255,255,255,0.12)',color:'#fff',size:22,weight:600,py:10,px:16,radius:10,shadow:false})).join('')}
+        </div>`:''}
         <!-- Price bottom-left big -->
-        <div style="position:absolute;bottom:40px;left:32px;">
-            ${d.hasPromo&&d.oldPrice?`<div style="margin-bottom:8px;">${sticker(`<s>${fmtPrice(d.oldPrice)}&nbsp;DH</s>`,{bg:'rgba(0,0,0,0.5)',size:24,weight:500,py:6,px:14,shadow:false})}</div>`:''}
-            ${sticker(`${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:48,weight:800,py:18,px:30,radius:18})}
+        <div style="position:absolute;bottom:80px;left:32px;">
+            ${d.hasPromo&&d.oldPrice
+                ?`<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+                    ${sticker(`<s>${fmtPrice(d.oldPrice)}&nbsp;DH</s>`,{bg:'rgba(0,0,0,0.5)',size:26,weight:500,py:8,px:16,radius:10,shadow:false})}
+                    <span style="color:#fff;font-size:30px;">➜</span>
+                  </div>`:''}
+            ${sticker(`${fmtPrice(d.price)}&nbsp;DH`,{bg:'#27ae60',size:52,weight:800,py:20,px:34,radius:18})}
         </div>
-        <!-- Watermark -->
-        <div style="position:absolute;bottom:44px;right:32px;opacity:0.25;font-family:'Montserrat',sans-serif;font-weight:800;font-size:18px;color:#fff;letter-spacing:2px;">CORNER MOBILE</div>
+        <!-- Shop + watermark bottom row -->
+        <div style="position:absolute;bottom:24px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:center;">
+            ${sticker(shopLabel,{bg:'rgba(0,0,0,0.45)',size:18,weight:500,py:6,px:12,radius:8,shadow:false})}
+            <div style="opacity:0.2;font-family:'Montserrat',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:2px;">CORNER MOBILE</div>
+        </div>
     </div>`;
 }
 
